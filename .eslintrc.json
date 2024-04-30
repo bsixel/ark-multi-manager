@@ -1,3 +1,71 @@
 {
-  "extends": "next/core-web-vitals"
+  "parser": "@typescript-eslint/parser",
+  "extends": [
+    "eslint:recommended",
+    "eslint-config-prettier",
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:react/jsx-runtime",
+    "plugin:@next/next/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:ts-react-hooks/recommended",
+    "prettier"
+  ],
+  "plugins": [
+    "@typescript-eslint",
+    "react",
+    "@next/eslint-plugin-next",
+    "prettier",
+    "unused-imports"
+  ],
+  "rules": {
+    "indent": "off",
+    "import/extensions": 0,
+    "comma-dangle": ["error", "always-multiline"],
+    "camelcase": "warn",
+    "no-trailing-spaces": "error",
+    "quotes": "off",
+    "quote-props": "off",
+    "prettier/prettier": "warn",
+    "prefer-const": "error",
+    "prefer-destructuring": [
+      "error",
+      {
+        "array": false,
+        "object": false
+      }
+    ],
+    "react/no-unknown-property": [
+      2,
+      {
+        "ignore": ["jsx", "global"]
+      }
+    ],
+    "@typescript-eslint/no-unused-vars": "off",
+    "unused-imports/no-unused-imports": "error",
+    "unused-imports/no-unused-vars": [
+      "warn",
+      {
+        "vars": "all",
+        "varsIgnorePattern": "^_",
+        "args": "after-used",
+        "argsIgnorePattern": "^_"
+      }
+    ]
+  },
+  "env": {
+    "node": true
+  },
+  "globals": {
+    "__dirname": true
+  },
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"],
+      "parserOptions": {
+        "sourceType": "module",
+        "project": "**/tsconfig.json"
+      }
+    }
+  ]
 }
