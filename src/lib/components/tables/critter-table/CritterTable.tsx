@@ -20,6 +20,22 @@ export default function CritterTable() {
       Object.fromEntries(defaultHiddenCritterCols.map((c) => [c, false]))
     );
 
+  const handleRowUpdate = async (updatedCreature, ogCreature) => {
+    if (updatedCreature.name != ogCreature.name) {
+      const resp = await fetch("/api/updateDino/name", {
+        ...DEFAULT_POST_OPTIONS,
+        body: JSON.stringify({
+          ownershipId: ownershipInfo.id,
+          newName: updatedCreature.name,
+          dinoId: ogCreature.dinoId,
+        }),
+      });
+      const newCreatureResp = await resp.json();
+      console.log(`Updated ${ogCreature.dinoId} to`, newCreatureResp[0]);
+      return newCreatureResp[0];
+    }
+  };
+
   return (
     <DataGrid
       getRowClassName={({ row }) => {
@@ -86,21 +102,7 @@ export default function CritterTable() {
           },
         },
       }}
-      processRowUpdate={async (updatedCreature, ogCreature) => {
-        if (updatedCreature.name != ogCreature.name) {
-          const resp = await fetch("/api/updateDino/name", {
-            ...DEFAULT_POST_OPTIONS,
-            body: JSON.stringify({
-              ownershipId: ownershipInfo.id,
-              newName: updatedCreature.name,
-              dinoId: ogCreature.dinoId,
-            }),
-          });
-          const newCreatureResp = await resp.json();
-          console.log(`Updated ${ogCreature.dinoId} to`, newCreatureResp[0]);
-          return newCreatureResp[0];
-        }
-      }}
+      processRowUpdate={handleRowUpdate}
       onProcessRowUpdateError={(err) => console.log(err)}
       isCellEditable={(c) => c.field == "name"}
       pageSizeOptions={[5, 10, 25, 50, 100]}

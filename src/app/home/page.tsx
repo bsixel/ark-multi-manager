@@ -151,7 +151,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!filterMap) {
-      setFilterMap(maps[0] || "The Island");
+      setFilterMap(maps[0] || localStorage.getItem(`${LOCAL_PREFIX}filterMap`));
     }
   }, [maps, filterMap]);
 
