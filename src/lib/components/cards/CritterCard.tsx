@@ -38,7 +38,9 @@ export const lifeStatusIcon = (
 ) => (
   <Tooltip
     placement="right-start"
-    title={creature.isDead && loadCreatures ? "Mark not dead" : "Mark dead"}
+    title={
+      loadCreatures ? (creature.isDead ? "Mark not dead" : "Mark dead") : null
+    }
     sx={{
       cursor: loadCreatures ? "pointer" : null,
     }}
