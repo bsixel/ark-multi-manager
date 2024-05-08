@@ -10,6 +10,7 @@ import {
   CardContent,
   Divider,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2";
@@ -17,9 +18,10 @@ import React, { useContext } from "react";
 import { DEFAULT_POST_OPTIONS } from "@/lib/utils/ApiHelper";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import StatChip from "../display/StatChip";
-import { Female, Male } from "@mui/icons-material";
+import { Female, HeartBroken, Male, LocalHospital } from "@mui/icons-material";
 import { GlobalContext } from "../layout/appBarLayout";
 import ColorChip from "../display/ColorChip";
+import { OwnershipInfo } from "@/lib/types/global";
 
 export const genderedIcon = (creature: Creature) => {
   return creature.gender == "fem" ? (
@@ -28,6 +30,44 @@ export const genderedIcon = (creature: Creature) => {
     <Male color="info" />
   );
 };
+
+export const lifeStatusIcon = (
+  creature: Creature,
+  ownershipInfo?: OwnershipInfo,
+  loadCreatures?: () => void
+) => (
+  <Tooltip
+    placement="right-start"
+    title={creature.isDead ? "Mark not dead" : "Mark dead"}
+    sx={{
+      cursor: loadCreatures ? "pointer" : null,
+    }}
+    onClick={
+      loadCreatures
+        ? async () => {
+            const resp = await fetch("/api/updateDino/dead", {
+              ...DEFAULT_POST_OPTIONS,
+              body: JSON.stringify({
+                ownershipId: ownershipInfo.id,
+                dinoId: creature.dinoId,
+                isDead: !creature.isDead,
+              }),
+            });
+            const newCreatureResp = await resp.json();
+            console.log(`Updated ${creature.dinoId} to`, newCreatureResp);
+
+            loadCreatures();
+          }
+        : () => {}
+    }
+  >
+    {creature.isDead ? (
+      <HeartBroken color="error" />
+    ) : (
+      <LocalHospital color="success" />
+    )}
+  </Tooltip>
+);
 
 const getCardShadow = (creature: Creature) => {
   if (creature.bestOfParents) {
@@ -71,6 +111,7 @@ export default function CritterCard({
           <div>
             {creature.hasBestOfSomeStat ? SomeMaxStar : null}
             {creature.favorite ? <FavoriteIcon color="warning" /> : null}
+            {lifeStatusIcon(creature, ownershipInfo, loadCreatures)}
           </div>
         </Stack>
         <Typography variant="h5" component="div" color="text.secondary">

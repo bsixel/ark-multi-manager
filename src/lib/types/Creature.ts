@@ -10,6 +10,7 @@ export type PARENT_RELATION = "FATHER_OF" | "MOTHER_OF";
 
 export interface Creature {
   favorite: boolean;
+  isDead: boolean;
   dinoId: string;
   species: string | undefined;
   map: string | undefined;

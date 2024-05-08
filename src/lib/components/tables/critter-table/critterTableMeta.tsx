@@ -2,7 +2,7 @@ import { Creature } from "@/lib/types/Creature";
 import { CLEAN_SPECIES, STAT_INDICES } from "@/lib/utils/constants";
 import { GridColDef } from "@mui/x-data-grid";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import { genderedIcon } from "../../cards/CritterCard";
+import { genderedIcon, lifeStatusIcon } from "../../cards/CritterCard";
 import ColorChip from "../../display/ColorChip";
 import { Stack } from "@mui/material";
 
@@ -19,6 +19,7 @@ export const critterColumns: GridColDef<Creature>[] = [
       return (
         <div>
           {creature.name} {genderedIcon(creature)}{" "}
+          {creature.isDead ? lifeStatusIcon(creature) : null}
           {creature.favorite ? <FavoriteIcon color="warning" /> : null}
         </div>
       );
