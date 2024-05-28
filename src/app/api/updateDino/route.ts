@@ -41,6 +41,7 @@ export async function POST(req) {
         name: dinoInfo.DinoName || species,
         tribeName: dinoInfo.TribeName,
         imprintedBy: dinoInfo.ImprinterName,
+        blueprintPath: `Blueprint'${dinoInfo.BlueprintPath.slice(0, -2)}'`,
       };
 
       for (let index = 0; index < dinoInfo.Stats.length; index++) {
@@ -84,7 +85,8 @@ export async function POST(req) {
           mutatedWeight: CASE WHEN coalesce(statTrack.mutatedWeight, 0) > ${nodeSafeDinoInfo["mutatedWeight"]} THEN coalesce(statTrack.mutatedWeight, 0) ELSE ${nodeSafeDinoInfo["mutatedWeight"]} END,
           wildMelee: CASE WHEN coalesce(statTrack.wildMelee, 0) > ${nodeSafeDinoInfo["wildMelee"]} THEN coalesce(statTrack.wildMelee, 0) ELSE ${nodeSafeDinoInfo["wildMelee"]} END,
           mutatedMelee: CASE WHEN coalesce(statTrack.mutatedMelee, 0) > ${nodeSafeDinoInfo["mutatedMelee"]} THEN coalesce(statTrack.mutatedMelee, 0) ELSE ${nodeSafeDinoInfo["mutatedMelee"]} END
-      }`;
+      }
+      MERGE (dino)-[:MEMBER_OF]->(s:Species {blueprintPath: $nodeSafeDinoInfo.blueprintPath})`;
 
       let father, mother;
       if (dinoInfo.Ancestry) {
