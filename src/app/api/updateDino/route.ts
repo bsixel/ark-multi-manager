@@ -30,7 +30,7 @@ export async function POST(req) {
       speciesMetaToUpdate.add(species);
 
       const nodeSafeDinoInfo = {
-        dinoId: `${dinoInfo.DinoID1}${dinoInfo.DinoID2}`,
+        dinoId: `${ownershipId}_${dinoInfo.DinoID1}${dinoInfo.DinoID2}`,
         species: species,
         gender: dinoInfo.IsFemale ? "fem" : "masc",
         neutered: dinoInfo.Neutered ?? false,
