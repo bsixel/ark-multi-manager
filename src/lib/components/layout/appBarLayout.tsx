@@ -8,9 +8,10 @@ import {
   Tab,
   Tabs,
   Toolbar,
+  Tooltip,
   Typography,
 } from "@mui/material";
-import { Home as HomeIcon } from "@mui/icons-material";
+import { Home as HomeIcon, Logout } from "@mui/icons-material";
 import { OwnershipInfo } from "@/lib/types/global";
 import {
   createContext,
@@ -64,8 +65,20 @@ export default function AppBarLayout({
   useEffect(() => {
     if (ownershipInfo.id) {
       localStorage.setItem(`${LOCAL_PREFIX}ownershipId`, ownershipInfo.id);
+      let knownOwnershipIds = JSON.parse(
+        localStorage.getItem(`${LOCAL_PREFIX}knownOwnershipId`) || "[]"
+      );
+
+      knownOwnershipIds = knownOwnershipIds.filter(
+        (oid) => oid.id !== ownershipInfo.id
+      );
+      knownOwnershipIds.push(ownershipInfo);
+      localStorage.setItem(
+        `${LOCAL_PREFIX}knownOwnershipId`,
+        JSON.stringify(knownOwnershipIds)
+      );
     }
-  }, [ownershipInfo?.id]);
+  }, [ownershipInfo]);
 
   const makeSnack = useCallback((level, msg) => {
     // It doesn't haven't to be perfect this'll almost never happen twice in a row, calm down
@@ -106,6 +119,11 @@ export default function AppBarLayout({
         });
     }
   }, [globalOwnershipId, makeSnack, router]);
+
+  const logout = () => {
+    setGlobalOwnershipId(null);
+    router.push("/");
+  };
 
   return (
     <>
@@ -171,9 +189,29 @@ export default function AppBarLayout({
                   </>
                 ) : null}
               </Stack>
-              <Typography alignContent="center">
-                {globalOwnershipId ? globalOwnershipId : null}
-              </Typography>
+              {globalOwnershipId ? (
+                <Stack direction="row" spacing={2}>
+                  <Typography alignContent="center">
+                    {globalOwnershipId}
+                  </Typography>
+
+                  <IconButton
+                    size="large"
+                    edge="start"
+                    color="inherit"
+                    aria-label="log out"
+                    sx={{ mr: 2 }}
+                    onClick={() => logout()}
+                  >
+                    <Tooltip
+                      placement="right-start"
+                      title="Use another tracking set"
+                    >
+                      <Logout />
+                    </Tooltip>
+                  </IconButton>
+                </Stack>
+              ) : null}
             </Stack>
           </Toolbar>
           {loading ? <LinearProgress color="secondary" /> : null}

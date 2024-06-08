@@ -1,22 +1,22 @@
 "use client";
-import { Info } from "@mui/icons-material";
 import {
+  Autocomplete,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  InputAdornment,
   LinearProgress,
   Stack,
   TextField,
-  Tooltip,
   Typography,
 } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2/Grid2";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { DEFAULT_POST_OPTIONS } from "@/lib/utils/ApiHelper";
 import { GlobalContext } from "@/lib/components/layout/appBarLayout";
+import { OwnershipInfo } from "@/lib/types/global";
+import { LOCAL_PREFIX } from "@/lib/utils/constants";
 
 export default function LandingPage() {
   const { setGlobalOwnershipId } = useContext(GlobalContext);
@@ -28,6 +28,16 @@ export default function LandingPage() {
     useState<boolean>(false);
   const [ownershipIdDialogOpen, setOwnershipIdDialogOpen] =
     useState<boolean>(false);
+  const [knownOwnershipIds, setKnownOwnershipIds] = useState<OwnershipInfo[]>(
+    []
+  );
+
+  useEffect(() => {
+    const loadedKnownOwnershipIds = JSON.parse(
+      localStorage.getItem(`${LOCAL_PREFIX}knownOwnershipId`) || "[]"
+    );
+    setKnownOwnershipIds(loadedKnownOwnershipIds);
+  }, []);
 
   return (
     <>
@@ -106,23 +116,32 @@ export default function LandingPage() {
               justifyItems="center"
               alignContent="center"
             >
-              <TextField
-                color="secondary"
-                value={ownershipId}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                  setOwnershipId(event.target.value);
+              <Autocomplete
+                onChange={(e, value) => {
+                  setOwnershipId(typeof value === "string" ? value : value.id);
                 }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Tooltip
-                        placement="right-start"
-                        title="This will look something like 'xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'"
-                      >
-                        <Info color="warning" />
-                      </Tooltip>
-                    </InputAdornment>
-                  ),
+                getOptionKey={(oid) =>
+                  typeof oid === "string" ? oid : oid?.id
+                }
+                getOptionLabel={(oid) =>
+                  typeof oid === "string" ? oid : oid?.name
+                }
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                disablePortal
+                freeSolo
+                id="combo-box-ownershipId"
+                options={knownOwnershipIds}
+                sx={{ width: 300 }}
+                renderInput={(params) => {
+                  const { ...safeParams } = params;
+                  delete safeParams["key"];
+                  return (
+                    <TextField
+                      {...safeParams}
+                      key="map-textfield"
+                      label="Tracking ID..."
+                    />
+                  );
                 }}
               />
               <Button
