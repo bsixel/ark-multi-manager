@@ -2,6 +2,7 @@
 import {
   Autocomplete,
   Button,
+  Card,
   Dialog,
   DialogActions,
   DialogContent,
@@ -11,12 +12,17 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { createFilterOptions } from "@mui/material/Autocomplete";
 import Grid from "@mui/material/Unstable_Grid2/Grid2";
 import { useContext, useEffect, useState } from "react";
 import { DEFAULT_POST_OPTIONS } from "@/lib/utils/ApiHelper";
 import { GlobalContext } from "@/lib/components/layout/appBarLayout";
 import { OwnershipInfo } from "@/lib/types/global";
 import { LOCAL_PREFIX } from "@/lib/utils/constants";
+
+const filter = createFilterOptions<OwnershipInfo>();
+const uuidTester =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default function LandingPage() {
   const { setGlobalOwnershipId } = useContext(GlobalContext);
@@ -98,7 +104,11 @@ export default function LandingPage() {
         justifyContent="center"
         alignItems="center"
       >
-        {
+        <Card
+          sx={{
+            padding: "2rem",
+          }}
+        >
           <Stack spacing={2}>
             <Grid xs={12}>
               <Typography
@@ -118,19 +128,56 @@ export default function LandingPage() {
             >
               <Autocomplete
                 onChange={(e, value) => {
-                  setOwnershipId(typeof value === "string" ? value : value.id);
+                  setOwnershipId(
+                    (typeof value === "string" ? value : value?.id) || ""
+                  );
                 }}
-                getOptionKey={(oid) =>
-                  typeof oid === "string" ? oid : oid?.id
-                }
-                getOptionLabel={(oid) =>
-                  typeof oid === "string" ? oid : oid?.name
-                }
+                getOptionKey={(oid) => (typeof oid === "string" ? oid : oid.id)}
+                getOptionLabel={(oid) => {
+                  if (typeof oid === "string") {
+                    return oid;
+                  }
+                  if (oid.new) {
+                    return oid.name;
+                  } else {
+                    return `${oid.name} (${oid.id})`;
+                  }
+                }}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
+                getOptionDisabled={(option) => {
+                  return !uuidTester.test(option.id);
+                }}
                 disablePortal
                 freeSolo
+                selectOnFocus
+                clearOnBlur
+                handleHomeEndKeys
                 id="combo-box-ownershipId"
                 options={knownOwnershipIds}
+                filterOptions={(options, params) => {
+                  const filtered = filter(options, params);
+
+                  const { inputValue } = params;
+                  const exists = options.some(
+                    (option) => inputValue === option.id
+                  );
+                  if (exists || !inputValue) return filtered;
+                  if (uuidTester.test(inputValue)) {
+                    filtered.push({
+                      id: inputValue,
+                      new: true,
+                      name: `Search for tracking ID "${inputValue}"`,
+                    });
+                  } else {
+                    filtered.push({
+                      id: inputValue,
+                      new: true,
+                      name: `Invalid tracking ID "${inputValue}" - should look something like "xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"`,
+                    });
+                  }
+
+                  return filtered;
+                }}
                 sx={{ width: 300 }}
                 renderInput={(params) => {
                   const { ...safeParams } = params;
@@ -171,7 +218,7 @@ export default function LandingPage() {
               </Button>
             </Stack>
           </Stack>
-        }
+        </Card>
       </Grid>
     </>
   );
