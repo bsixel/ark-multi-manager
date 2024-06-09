@@ -145,15 +145,35 @@ export default function Home() {
     },
   });
 
+  // Include an option for "all maps"
+  const filterMapOptions = useMemo(() => {
+    const mappedLoadedMaps = maps.map((map) => {
+      return {
+        label: map,
+        id: map,
+      };
+    });
+    mappedLoadedMaps.push({ label: "All Maps", id: null });
+    return mappedLoadedMaps;
+  }, [maps]);
+
   const optionableSpecies = useMemo(() => {
     return species.map((s) => s);
   }, [species]);
 
   useEffect(() => {
-    if (!filterMap) {
-      setFilterMap(maps[0] || localStorage.getItem(`${LOCAL_PREFIX}filterMap`));
+    let locallyStoredFilterMap = localStorage.getItem(
+      `${LOCAL_PREFIX}filterMap`
+    );
+    // Null stores as stringified so, this silliness
+    if (locallyStoredFilterMap == "null") {
+      locallyStoredFilterMap = null;
     }
-  }, [maps, filterMap]);
+    const locallyStoredFilterMapAsOption = filterMapOptions.find(
+      (m) => m.id == locallyStoredFilterMap
+    );
+    setFilterMap(locallyStoredFilterMapAsOption || filterMapOptions[0]);
+  }, [maps, filterMapOptions]);
 
   const selectedCreaturesData = useMemo(() => {
     return creatures
@@ -168,7 +188,7 @@ export default function Home() {
       if (filterSpecies.length && !filterSpecies.includes(creature.species)) {
         return false;
       }
-      if (filterMap && filterMap != creature.map) {
+      if (filterMap?.id && filterMap.id != creature.map) {
         return false;
       }
       for (const statName of Object.values(STAT_INDICES)) {
@@ -233,21 +253,24 @@ export default function Home() {
 
   const maxLevelForSpecies = useCallback(
     (selectedSpecies: string) => {
+      const mapSelector = filterMap.id || "allMaps";
       const wildMax = Object.values(STAT_INDICES)
         .filter((s) => s != "Torpor")
         .reduce((sum, s) => {
-          return (sum += speciesBestStats[selectedSpecies][`wild${s}`]);
+          return (sum +=
+            speciesBestStats[selectedSpecies][mapSelector][`wild${s}`]);
         }, 1);
 
       const mutatedMax = Object.values(STAT_INDICES)
         .filter((s) => s != "Torpor")
         .reduce((sum, s) => {
-          return (sum += speciesBestStats[selectedSpecies][`mutated${s}`]);
+          return (sum +=
+            speciesBestStats[selectedSpecies][mapSelector][`mutated${s}`]);
         }, 1);
 
       return `${wildMax} | ${wildMax + mutatedMax}`;
     },
-    [speciesBestStats]
+    [speciesBestStats, filterMap]
   );
 
   return ownershipInfo?.id && ownershipInfo?.name ? (
@@ -297,7 +320,11 @@ export default function Home() {
                       marginLeft: "8px",
                     }}
                   >
-                    <Button variant="contained" component="span">
+                    <Button
+                      variant="contained"
+                      component="span"
+                      disabled={!filterMap?.id}
+                    >
                       Add a creature
                     </Button>
                   </label>
@@ -335,13 +362,19 @@ export default function Home() {
                   <Autocomplete
                     onChange={(e, value) => {
                       setFilterMap(value);
-                      localStorage.setItem(`${LOCAL_PREFIX}filterMap`, value);
+                      localStorage.setItem(
+                        `${LOCAL_PREFIX}filterMap`,
+                        value.id
+                      );
+                    }}
+                    isOptionEqualToValue={(option, value) => {
+                      return option == value || option.id == value.id;
                     }}
                     value={filterMap}
                     disableClearable
                     disablePortal
                     id="combo-box-maps"
-                    options={maps}
+                    options={filterMapOptions}
                     sx={{ width: 300 }}
                     renderInput={(params) => {
                       const { ...safeParams } = params;
@@ -391,7 +424,11 @@ export default function Home() {
                               key={`${filterSpecies}_${stat}`}
                               isSummary
                               canFilter
-                              creature={speciesBestStats[selectedSpecies]}
+                              creature={
+                                speciesBestStats[selectedSpecies][
+                                  filterMap?.id || "allMaps"
+                                ]
+                              }
                               stat={stat}
                             />
                           ))}

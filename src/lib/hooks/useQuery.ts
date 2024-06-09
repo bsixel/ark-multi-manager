@@ -1,7 +1,7 @@
 "use client";
 
 import { DEFAULT_GET_OPTIONS } from "../utils/ApiHelper";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export type UseQueryConfig<T> = {
   url: RequestInfo | URL;
@@ -61,14 +61,18 @@ function useQuery<T>(config: UseQueryConfig<T>) {
     }
   }, [exec, manual]);
 
-  const ret = {
-    queryResult,
-    isLoading,
-    error,
-    transactionId,
-  } as UseQueryOutput<T>;
+  const ret = useMemo(
+    () =>
+      ({
+        queryResult,
+        isLoading,
+        error,
+        transactionId,
+        exec,
+      }) as UseQueryOutput<T>,
+    [error, isLoading, queryResult, transactionId, exec]
+  );
 
-  ret.exec = exec;
   return ret;
 }
 

@@ -34,6 +34,12 @@
         "uriFormat": "%s",
         "action": "debugWithChrome"
       }
+    },
+    {
+      "name": "Refresh Neo Ark data",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run initArkData"
     }
   ]
 }

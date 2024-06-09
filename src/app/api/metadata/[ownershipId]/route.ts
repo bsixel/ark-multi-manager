@@ -5,6 +5,16 @@ export async function GET(
   request: Request,
   { params }: { params: { ownershipId: string } }
 ) {
+  if (!params.ownershipId || params.ownershipId == "undefined") {
+    return NextResponse.json(
+      {
+        species: [],
+        bestStats: [],
+        maps: [],
+      },
+      { status: 201 }
+    );
+  }
   try {
     const { driver } = createSession();
 
@@ -12,23 +22,41 @@ export async function GET(
     const { records } = await driver.executeQuery(
       `
       MATCH (m:Map)
-      MATCH (oi:OwnershipInfo {id: "ee6a9b6a-b915-4276-ad4e-ed529f44adc2"})
-      MATCH (mapBest:Map)<-[:ON_MAP]-(bests:BestOf)-[:OWNED_BY]->(oi)
-      WITH m, bests{.*, map: mapBest.name} AS mappedBests
-      RETURN collect(mappedBests) as bestStats, collect(distinct m.name) as maps`,
+      MATCH (oi:OwnershipInfo {id: $ownershipId})
+      OPTIONAL MATCH (map:Map)<-[:ON_MAP]-(bests:BestOf)-[:OWNED_BY]->(oi)
+      WITH bests{.*, map: map.name } as bestOfMap, map.name as maps ORDER BY map.order ASC
+      RETURN collect(bestOfMap) as bests, collect(distinct maps) as maps`,
       { ownershipId: params.ownershipId }
     );
 
     const species = new Set<string>();
+    const maps = records[0]["_fields"][1];
     const bestStats = {};
     records[0]["_fields"][0].forEach((bestOfNode) => {
       const nodeSpecies = bestOfNode.species;
+      const nodeMap = bestOfNode.map;
       species.add(nodeSpecies);
-      bestStats[nodeSpecies] = {};
-      Object.entries(bestOfNode).forEach(([stat, value]) => {
-        bestStats[nodeSpecies][stat] = parseInt(value as string);
+      if (!bestStats[nodeSpecies]) {
+        bestStats[nodeSpecies] = {
+          allMaps: {},
+        };
+      }
+      if (!bestStats[nodeSpecies][nodeMap]) {
+        bestStats[nodeSpecies][nodeMap] = {};
+      }
+      Object.entries(bestOfNode).forEach(([field, value]) => {
+        if (field == "map" || field == "species") return;
+        const statValue = parseInt(value as string);
+        bestStats[nodeSpecies][nodeMap][field] = statValue;
+        if (bestStats[nodeSpecies].allMaps[field] == undefined) {
+          bestStats[nodeSpecies].allMaps[field] = statValue;
+        } else {
+          bestStats[nodeSpecies].allMaps[field] = Math.max(
+            statValue,
+            bestStats[nodeSpecies].allMaps[field]
+          );
+        }
       });
-      bestStats[nodeSpecies].species = nodeSpecies;
     });
 
     driver.close();
@@ -36,7 +64,7 @@ export async function GET(
       {
         species: Array.from(species).sort(),
         bestStats,
-        maps: records[0]["_fields"][1],
+        maps,
       },
       { status: 201 }
     );
