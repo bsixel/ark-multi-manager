@@ -106,7 +106,7 @@ export async function POST(req) {
         RETURN dino, statTrack
       `;
 
-      const { records } = await driver.executeQuery(query, {
+      const { records, summary } = await driver.executeQuery(query, {
         map,
         ownershipId,
         nodeSafeDinoInfo,

@@ -227,7 +227,7 @@ export default function Home() {
       body: JSON.stringify({
         dinos,
         ownershipId: ownershipInfo.id,
-        map: filterMap,
+        map: filterMap.id,
       }),
     })
       .then(() => {
