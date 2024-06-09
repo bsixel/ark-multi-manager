@@ -237,6 +237,7 @@ export default function Home() {
           "success",
           `Successfully uploaded ${dinos.length} creatures!`
         );
+        event.target.files = [];
       })
       .catch((err) => {
         makeSnack("error", "Error uploading creatures!");
