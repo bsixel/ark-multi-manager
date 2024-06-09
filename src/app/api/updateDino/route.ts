@@ -66,9 +66,10 @@ export async function POST(req) {
       MATCH (oi:OwnershipInfo {id: $ownershipId})
       MATCH (map:Map {name: $map})
       MERGE (map)<-[:ON_MAP]-(dino:Dino:${species} { dinoId: $nodeSafeDinoInfo.dinoId })-[:OWNED_BY]->(oi) SET dino += $nodeSafeDinoInfo
+      MERGE (s:Species {blueprintPath: $nodeSafeDinoInfo.blueprintPath})) ON CREATE SET s.label = "${species}"
       MERGE (map)<-[:ON_MAP]-(statTrack:BestOf:${species})-[:OWNED_BY]->(oi)
         SET statTrack += {
-          species: "${species}",
+          species: s.label,
           wildHealth: CASE WHEN coalesce(statTrack.wildHealth, 0) > ${nodeSafeDinoInfo["wildHealth"]} THEN coalesce(statTrack.wildHealth, 0) ELSE ${nodeSafeDinoInfo["wildHealth"]} END,
           mutatedHealth: CASE WHEN coalesce(statTrack.mutatedHealth, 0) > ${nodeSafeDinoInfo["mutatedHealth"]} THEN coalesce(statTrack.mutatedHealth, 0) ELSE ${nodeSafeDinoInfo["mutatedHealth"]} END,
           wildStamina: CASE WHEN coalesce(statTrack.wildStamina, 0) > ${nodeSafeDinoInfo["wildStamina"]} THEN coalesce(statTrack.wildStamina, 0) ELSE ${nodeSafeDinoInfo["wildStamina"]} END,
@@ -86,7 +87,7 @@ export async function POST(req) {
           wildMelee: CASE WHEN coalesce(statTrack.wildMelee, 0) > ${nodeSafeDinoInfo["wildMelee"]} THEN coalesce(statTrack.wildMelee, 0) ELSE ${nodeSafeDinoInfo["wildMelee"]} END,
           mutatedMelee: CASE WHEN coalesce(statTrack.mutatedMelee, 0) > ${nodeSafeDinoInfo["mutatedMelee"]} THEN coalesce(statTrack.mutatedMelee, 0) ELSE ${nodeSafeDinoInfo["mutatedMelee"]} END
       }
-      MERGE (dino)-[:MEMBER_OF]->(s:Species {blueprintPath: $nodeSafeDinoInfo.blueprintPath})`;
+      MERGE (dino)-[:MEMBER_OF]->(s)`;
 
       let father, mother;
       if (dinoInfo.Ancestry) {
@@ -106,7 +107,7 @@ export async function POST(req) {
         RETURN dino, statTrack
       `;
 
-      const { records, summary } = await driver.executeQuery(query, {
+      const { records } = await driver.executeQuery(query, {
         map,
         ownershipId,
         nodeSafeDinoInfo,
