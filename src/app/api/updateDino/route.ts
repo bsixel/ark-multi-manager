@@ -17,8 +17,6 @@ export async function POST(req) {
       allDinoInfo = [userDinoInfo];
     }
 
-    const speciesMetaToUpdate = new Set<string>();
-
     for (
       let dinoEntryIdx = 0;
       dinoEntryIdx < allDinoInfo.length;
@@ -27,11 +25,8 @@ export async function POST(req) {
       const dinoInfo = allDinoInfo[dinoEntryIdx];
       const species = dinoInfo.SpeciesName.trim().replace(" ", "_");
 
-      speciesMetaToUpdate.add(species);
-
       const nodeSafeDinoInfo = {
         dinoId: `${ownershipId}_${dinoInfo.DinoID1}${dinoInfo.DinoID2}`,
-        species: species,
         gender: dinoInfo.IsFemale ? "fem" : "masc",
         neutered: dinoInfo.Neutered ?? false,
         colors: dinoInfo.ColorSetIndices,
@@ -66,7 +61,7 @@ export async function POST(req) {
       MATCH (oi:OwnershipInfo {id: $ownershipId})
       MATCH (map:Map {name: $map})
       MERGE (s:Species {blueprintPath: $nodeSafeDinoInfo.blueprintPath}) ON CREATE SET s.label = $nodeSafeDinoInfo.species
-      MERGE (map)<-[:ON_MAP]-(dino:Dino { dinoId: $nodeSafeDinoInfo.dinoId })-[:OWNED_BY]->(oi) SET dino += $nodeSafeDinoInfo
+      MERGE (map)<-[:ON_MAP]-(dino:Dino { dinoId: $nodeSafeDinoInfo.dinoId, species: s.label })-[:OWNED_BY]->(oi) SET dino += $nodeSafeDinoInfo
       MERGE (map)<-[:ON_MAP]-(statTrack:BestOf {species: s.label})-[:OWNED_BY]->(oi)
         SET statTrack += {
           species: s.label,
