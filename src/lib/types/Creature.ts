@@ -13,6 +13,7 @@ export interface Creature {
   isDead: boolean;
   dinoId: string;
   species: string | undefined;
+  speciesLabel: string | undefined;
   map: string | undefined;
   gender: string | undefined;
   neutered: boolean;

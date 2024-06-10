@@ -2014,18 +2014,19 @@ export const creatureMappings = [
   },
 ];
 
-export const FIX_SPECIES_MAPPINGS_QUERY = `
-  MATCH (bestOf:BestOf)
-  WITH bestOf,
-  COLLECT {
-    MATCH (species:Species)
-    WITH species, bestOf, apoc.text.sorensenDiceSimilarity(bestOf.species, species.label) AS similarity
-    MATCH (species) WHERE similarity > 0.5 RETURN species ORDER BY similarity DESC
-  } AS possibleSpecies
-  WITH bestOf, head(possibleSpecies) AS chosenSpecies
-  MERGE (bestOf)-[mo:MEMBER_OF]->(chosenSpecies)
-  RETURN bestOf, mo, chosenSpecies
-`;
+// OLD DO NOT USE JUST FOR REFERENCE TODO: Shouldn't be needed anymore but rewrite just in case
+// export const FIX_SPECIES_MAPPINGS_QUERY = `
+//   MATCH (bestOf:BestOf)
+//   WITH bestOf,
+//   COLLECT {
+//     MATCH (species:Species)
+//     WITH species, bestOf, apoc.text.sorensenDiceSimilarity(bestOf.species, species.label) AS similarity
+//     MATCH (species) WHERE similarity > 0.5 RETURN species ORDER BY similarity DESC
+//   } AS possibleSpecies
+//   WITH bestOf, head(possibleSpecies) AS chosenSpecies
+//   MERGE (bestOf)-[mo:MEMBER_OF]->(chosenSpecies)
+//   RETURN bestOf, mo, chosenSpecies
+// `;
 
 export async function GET() {
   return NextResponse.json(creatureMappings, { status: 201 });

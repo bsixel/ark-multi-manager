@@ -15,11 +15,11 @@ export async function GET(
 
     const query = `
     MATCH (oi:OwnershipInfo {id: $ownershipId})
-    MATCH (d:Dino)-[:OWNED_BY]->(oi)
+    MATCH (s:Species)<-[:MEMBER_OF]-(d:Dino)-[:OWNED_BY]->(oi)
         OPTIONAL MATCH (mother:Dino)-[mr:MOTHER_OF]->(d)<-[fr:FATHER_OF]-(father:Dino)
-        OPTIONAL MATCH (bestOfSpecies:BestOf) WHERE d.species IN labels(bestOfSpecies)
+        OPTIONAL MATCH (bestOfSpecies:BestOf)-[:MEMBER_OF]->(s)
         OPTIONAL MATCH (d)-[:ON_MAP]->(map:Map)
-        WITH d, mother, father, map,
+        WITH d, s, mother, father, map,
             (d.combinedBaseHealth >= mother.combinedBaseHealth AND d.combinedBaseHealth >= father.combinedBaseHealth AND
             d.combinedBaseStamina >= mother.combinedBaseStamina AND d.combinedBaseStamina >= father.combinedBaseStamina AND
             d.combinedBaseOxygen >= mother.combinedBaseOxygen AND d.combinedBaseOxygen >= father.combinedBaseOxygen AND
@@ -48,8 +48,8 @@ export async function GET(
             d.mutatedWeight = bestOfSpecies.mutatedWeight AND bestOfSpecies.mutatedWeight <> 0 as hasBestMutatedWeight,
             d.wildMelee = bestOfSpecies.wildMelee AND bestOfSpecies.wildMelee <> 0 as hasBestWildMelee,
             d.mutatedMelee = bestOfSpecies.mutatedMelee AND bestOfSpecies.mutatedMelee <> 0 as hasBestMutatedMelee
-          WITH d{.*, map: map.name, bestOfParents: bestOfParents, mother: mother.dinoId, father: father.dinoId, hasBestWildHealth, hasBestWildStamina, hasBestWildOxygen, hasBestWildFood, hasBestWildSpeed, hasBestWildWeight, hasBestWildMelee, hasBestMutatedHealth, hasBestMutatedStamina, hasBestMutatedOxygen, hasBestMutatedFood, hasBestMutatedSpeed, hasBestMutatedWeight, hasBestMutatedMelee, hasBestOfSomeStat: hasBestWildHealth OR hasBestWildStamina OR hasBestWildOxygen OR hasBestWildFood OR hasBestWildSpeed OR hasBestWildWeight OR hasBestWildMelee } as dinoInfo
-    RETURN dinoInfo ORDER BY dinoInfo.species, dinoInfo.level, dinoInfo.name
+          WITH d{.*, species: s.blueprintPath, speciesLabel: s.label, map: map.name, bestOfParents: bestOfParents, mother: mother.dinoId, father: father.dinoId, hasBestWildHealth, hasBestWildStamina, hasBestWildOxygen, hasBestWildFood, hasBestWildSpeed, hasBestWildWeight, hasBestWildMelee, hasBestMutatedHealth, hasBestMutatedStamina, hasBestMutatedOxygen, hasBestMutatedFood, hasBestMutatedSpeed, hasBestMutatedWeight, hasBestMutatedMelee, hasBestOfSomeStat: hasBestWildHealth OR hasBestWildStamina OR hasBestWildOxygen OR hasBestWildFood OR hasBestWildSpeed OR hasBestWildWeight OR hasBestWildMelee } as dinoInfo
+    RETURN dinoInfo ORDER BY dinoInfo.speciesLabel ASC, dinoInfo.baseLevel DESC, dinoInfo.name ASC
     `;
 
     // Fetch stuff like the kinds of tamed critters we've seen etc

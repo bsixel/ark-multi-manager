@@ -1,4 +1,4 @@
-import { createSession } from "@/lib/utils/ApiHelper";
+import { UnwrapStandard, createSession } from "@/lib/utils/ApiHelper";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -18,24 +18,23 @@ export async function GET(
   try {
     const { driver } = createSession();
 
-    // Fetch stuff like the kinds of tamed critters we've seen etc
-    const { records } = await driver.executeQuery(
+    // Fetch best of each species stats
+    const { records: bestOfRecords } = await driver.executeQuery(
       `
       MATCH (map:Map)
       MATCH (oi:OwnershipInfo {id: $ownershipId})
       OPTIONAL MATCH (map)<-[:ON_MAP]-(bests:BestOf)-[:OWNED_BY]->(oi)
-      WITH bests{.*, map: map.name } as bestOfMap, map.name as maps ORDER BY map.order ASC
+      OPTIONAL MATCH (bests)-[:MEMBER_OF]->(s:Species)
+      WITH bests{.*, map: map.name, species: s.blueprintPath } as bestOfMap, map.name as maps ORDER BY map.order ASC
       RETURN collect(bestOfMap) as bests, collect(distinct maps) as maps`,
       { ownershipId: params.ownershipId }
     );
 
-    const species = new Set<string>();
-    const maps = records[0]["_fields"][1];
+    const maps = bestOfRecords[0]["_fields"][1];
     const bestStats = {};
-    records[0]["_fields"][0].forEach((bestOfNode) => {
+    bestOfRecords[0]["_fields"][0].forEach((bestOfNode) => {
       const nodeSpecies = bestOfNode.species;
       const nodeMap = bestOfNode.map;
-      species.add(nodeSpecies);
       if (!bestStats[nodeSpecies]) {
         bestStats[nodeSpecies] = {
           allMaps: {},
@@ -59,10 +58,18 @@ export async function GET(
       });
     });
 
+    // Fetch species
+    const { records: speciesRecords } = await driver.executeQuery(
+      `
+        MATCH (s:Species) RETURN s ORDER BY s.label
+      `,
+      { ownershipId: params.ownershipId }
+    );
+
     driver.close();
     return NextResponse.json(
       {
-        species: Array.from(species).sort(),
+        species: UnwrapStandard(speciesRecords),
         bestStats,
         maps,
       },

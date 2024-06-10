@@ -1,5 +1,5 @@
 import { Creature } from "@/lib/types/Creature";
-import { CLEAN_SPECIES, STAT_INDICES } from "@/lib/utils/constants";
+import { STAT_INDICES } from "@/lib/utils/constants";
 import { GridColDef } from "@mui/x-data-grid";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import { genderedIcon, lifeStatusIcon } from "../../cards/CritterCard";
@@ -40,7 +40,7 @@ export const critterColumns: GridColDef<Creature>[] = [
     field: "species",
     headerName: "Species",
     width: 150,
-    valueFormatter: (_unused, row) => CLEAN_SPECIES(row.species),
+    valueFormatter: (_unused, row) => row.speciesLabel,
   },
   {
     field: "map",

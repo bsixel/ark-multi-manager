@@ -1,7 +1,7 @@
 import { HomeContext, SomeMaxStar } from "@/app/home/page";
 import useToggle from "@/lib/hooks/useToggle";
 import { Creature } from "@/lib/types/Creature";
-import { CLEAN_SPECIES, STAT_INDICES } from "@/lib/utils/constants";
+import { STAT_INDICES } from "@/lib/utils/constants";
 import {
   Box,
   Button,
@@ -91,7 +91,7 @@ export default function CritterCard({
   backgroundColor?: string;
 }) {
   const { ownershipInfo } = useContext(GlobalContext);
-  const { selectedCreatures, setSelectedCreatures, loadCreatures } =
+  const { selectedCreatures, setSelectedCreatures, loadCreatures, species } =
     useContext(HomeContext);
 
   const { value: showStats, toggle: toggleShowStats } = useToggle(false);
@@ -107,7 +107,7 @@ export default function CritterCard({
       <CardContent>
         <Stack direction={"row"} justifyContent={"space-between"}>
           <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-            {`${CLEAN_SPECIES(creature.species)} `}
+            {`${species.find((s) => s.blueprintPath == creature.species).label} `}
             {genderedIcon(creature)}
           </Typography>
           <div>

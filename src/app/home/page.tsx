@@ -38,7 +38,6 @@ import { ReactFlowProvider } from "reactflow";
 import { Info, Star } from "@mui/icons-material";
 import {
   BestOf,
-  CLEAN_SPECIES,
   LOCAL_PREFIX,
   STAT_INDICES,
   STAT_NAME_VARIANTS,
@@ -47,10 +46,11 @@ import StatChip from "@/lib/components/display/StatChip";
 import { GlobalContext } from "@/lib/components/layout/appBarLayout";
 import ColorChip from "@/lib/components/display/ColorChip";
 import { DINO_COLORS } from "@/lib/utils/ColorMappings";
+import { Species } from "@/lib/types/global";
 
 type MetadataDefinition = {
   bestStats: BestOf[];
-  species: string[];
+  species: Species[];
   maps: string[];
 };
 
@@ -98,8 +98,8 @@ export type HomeContextDefinition = {
   setSelectedCreatures: (sel) => void;
   selectedCreaturesData: Creature[];
   handleDinoUpload: (event) => void;
-  species: string[];
-  filterSpecies: string[];
+  species: Species[];
+  filterSpecies: Species[];
   filterMap: string;
   speciesBestStats: BestOf[];
   statFilters: Record<string, StatFilter>;
@@ -115,7 +115,7 @@ export default function Home() {
 
   const [selectedCreatures, setSelectedCreatures] =
     useState<GridRowSelectionModel>([]);
-  const [filterSpecies, setFilterSpecies] = useState([]);
+  const [filterSpecies, setFilterSpecies] = useState<Species[]>([]);
   const [filterMap, setFilterMap] = useState(null);
   const [statFilters, setStatFilters] = useState({});
   const [colorFilters, setColorFilters] = useState<ColorFilter>({});
@@ -158,8 +158,13 @@ export default function Home() {
   }, [maps]);
 
   const optionableSpecies = useMemo(() => {
-    return species.map((s) => s);
-  }, [species]);
+    // Only show species for relevant map / that exist at all so far
+    return species.filter(
+      (s) =>
+        (!filterMap?.id && speciesBestStats[s.blueprintPath]) ||
+        speciesBestStats[s.blueprintPath]?.[filterMap.id]
+    );
+  }, [species, filterMap, speciesBestStats]);
 
   useEffect(() => {
     let locallyStoredFilterMap = localStorage.getItem(
@@ -185,7 +190,10 @@ export default function Home() {
 
   const filteredCreatures = useMemo(() => {
     return creatures.filter((creature) => {
-      if (filterSpecies.length && !filterSpecies.includes(creature.species)) {
+      if (
+        filterSpecies.length &&
+        !filterSpecies.find((s) => creature.species == s.blueprintPath)
+      ) {
         return false;
       }
       if (filterMap?.id && filterMap.id != creature.map) {
@@ -349,7 +357,7 @@ export default function Home() {
                     id="combo-box-species"
                     options={optionableSpecies}
                     sx={{ width: 300 }}
-                    getOptionLabel={(opt) => CLEAN_SPECIES(opt)}
+                    getOptionLabel={(opt) => opt.label}
                     renderInput={(params) => {
                       const { ...safeParams } = params;
                       delete safeParams["key"];
@@ -417,21 +425,23 @@ export default function Home() {
                   <Info color="warning" /> Stats and colors for filtered
                   species:
                   <Stack direction="column" className="mt-2" spacing={2}>
-                    {filterSpecies.map((selectedSpecies: string) => (
+                    {filterSpecies.map((selectedSpecies: Species) => (
                       <div key={`filtered_${selectedSpecies}_bests`}>
-                        {CLEAN_SPECIES(selectedSpecies)}{" "}
-                        {`(max ${maxLevelForSpecies(selectedSpecies)})`}:
+                        {selectedSpecies.label}{" "}
+                        {`(max ${maxLevelForSpecies(selectedSpecies.blueprintPath)})`}
+                        :
                         <Stack className="mt-2" direction="row" spacing={2}>
                           {Object.values(STAT_INDICES).map((stat) => (
                             <StatChip
                               key={`${selectedSpecies}_${stat}`}
                               isSummary
                               canFilter
-                              creature={
-                                speciesBestStats[selectedSpecies][
-                                  filterMap?.id || "allMaps"
-                                ] || {}
-                              }
+                              creature={{
+                                ...(speciesBestStats[
+                                  selectedSpecies.blueprintPath
+                                ][filterMap?.id || "allMaps"] || {}),
+                                species: selectedSpecies.blueprintPath,
+                              }}
                               stat={stat}
                             />
                           ))}
@@ -444,7 +454,7 @@ export default function Home() {
                                 key={`color-filter-${selectedSpecies}-${idx}`}
                                 labelId={`label-color-filter-${selectedSpecies}-${idx}`}
                                 id={`color-filter-${selectedSpecies}-${idx}`}
-                                value={`${colorFilters?.[selectedSpecies]?.[idx] || 0}`}
+                                value={`${colorFilters?.[selectedSpecies.blueprintPath]?.[idx] || 0}`}
                                 label="Age"
                                 onChange={(event: SelectChangeEvent) => {
                                   const newColorFilters = {};
@@ -452,51 +462,56 @@ export default function Home() {
                                     if (
                                       colorFilterSpeciesEntry != selectedSpecies
                                     ) {
-                                      newColorFilters[colorFilterSpeciesEntry] =
-                                        colorFilters[colorFilterSpeciesEntry];
+                                      newColorFilters[
+                                        colorFilterSpeciesEntry.blueprintPath
+                                      ] =
+                                        colorFilters[
+                                          colorFilterSpeciesEntry.blueprintPath
+                                        ];
                                     } else {
                                       const temp = {
                                         ...colorFilters[
-                                          colorFilterSpeciesEntry
+                                          colorFilterSpeciesEntry.blueprintPath
                                         ],
                                       };
                                       temp[idx] = parseInt(event.target.value);
-                                      newColorFilters[colorFilterSpeciesEntry] =
-                                        temp;
+                                      newColorFilters[
+                                        colorFilterSpeciesEntry.blueprintPath
+                                      ] = temp;
                                     }
                                   });
                                   setColorFilters(newColorFilters);
                                 }}
                               >
-                                {speciesColors[selectedSpecies][idx].map(
-                                  (speciesRegionColorOption) => {
-                                    const itemLabel =
-                                      DINO_COLORS[speciesRegionColorOption]
-                                        ?.name || "Empty Region";
-                                    return (
-                                      <MenuItem
-                                        key={`species-region-color-option-${idx}-${speciesRegionColorOption}`}
-                                        value={`${speciesRegionColorOption}`}
-                                        className="flex space-x-2"
-                                      >
-                                        <Stack direction="row">
-                                          <ColorChip
-                                            key={`color-chip-${selectedSpecies}-${idx}-chip`}
-                                            mini
-                                            hexTooltip
-                                            color={speciesRegionColorOption}
-                                          />
-                                          <Typography
-                                            className="pt-1 pl-2"
-                                            fontSize={12}
-                                          >
-                                            {itemLabel}
-                                          </Typography>
-                                        </Stack>
-                                      </MenuItem>
-                                    );
-                                  }
-                                )}
+                                {speciesColors[selectedSpecies.blueprintPath][
+                                  idx
+                                ].map((speciesRegionColorOption) => {
+                                  const itemLabel =
+                                    DINO_COLORS[speciesRegionColorOption]
+                                      ?.name || "Empty Region";
+                                  return (
+                                    <MenuItem
+                                      key={`species-region-color-option-${idx}-${speciesRegionColorOption}`}
+                                      value={`${speciesRegionColorOption}`}
+                                      className="flex space-x-2"
+                                    >
+                                      <Stack direction="row">
+                                        <ColorChip
+                                          key={`color-chip-${selectedSpecies}-${idx}-chip`}
+                                          mini
+                                          hexTooltip
+                                          color={speciesRegionColorOption}
+                                        />
+                                        <Typography
+                                          className="pt-1 pl-2"
+                                          fontSize={12}
+                                        >
+                                          {itemLabel}
+                                        </Typography>
+                                      </Stack>
+                                    </MenuItem>
+                                  );
+                                })}
                               </Select>
                             );
                           })}

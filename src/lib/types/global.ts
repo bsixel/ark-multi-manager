@@ -9,3 +9,9 @@ export type ArkMap = {
   id: string;
   order: number;
 };
+
+export type Species = {
+  blueprintPath: string; // Basically the unique ID
+  primalName: string;
+  label: string;
+};

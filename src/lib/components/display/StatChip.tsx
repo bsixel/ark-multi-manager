@@ -38,7 +38,7 @@ export default function StatChip({
       onClick={() => {
         if (!canFilter) return;
         const newStatFilters = {};
-        species.forEach((s) => (newStatFilters[s] = {}));
+        species.forEach((s) => (newStatFilters[s.blueprintPath] = {}));
 
         Object.entries(statFilters).forEach(
           ([species, stats]) => (newStatFilters[species] = stats)
