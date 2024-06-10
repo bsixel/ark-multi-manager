@@ -29,7 +29,7 @@ export default function StatChip({
     <Chip
       key={`stat_${stat}`}
       className="w-fit"
-      label={`${stat}: ${prefixes.map((p) => creature[`${p}${stat}`]).join(" | ")}`}
+      label={`${stat}: ${prefixes.map((p) => creature?.[`${p}${stat}`] || 0).join(" | ")}`}
       icon={statFilters[creature.species]?.[stat] ? <FilterAlt /> : null}
       sx={{
         backgroundColor:

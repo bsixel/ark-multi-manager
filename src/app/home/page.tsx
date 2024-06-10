@@ -259,14 +259,15 @@ export default function Home() {
         .filter((s) => s != "Torpor")
         .reduce((sum, s) => {
           return (sum +=
-            speciesBestStats[selectedSpecies][mapSelector][`wild${s}`]);
+            speciesBestStats[selectedSpecies][mapSelector]?.[`wild${s}`] || 0);
         }, 1);
 
       const mutatedMax = Object.values(STAT_INDICES)
         .filter((s) => s != "Torpor")
         .reduce((sum, s) => {
           return (sum +=
-            speciesBestStats[selectedSpecies][mapSelector][`mutated${s}`]);
+            speciesBestStats[selectedSpecies][mapSelector]?.[`mutated${s}`] ||
+            0);
         }, 1);
 
       return `${wildMax} | ${wildMax + mutatedMax}`;
@@ -307,7 +308,7 @@ export default function Home() {
               <Stack>
                 <Stack spacing={2} direction={"row"} alignItems={"center"}>
                   <input
-                    accept="*.json"
+                    accept=".json"
                     style={{ display: "none" }}
                     id="raised-button-file"
                     multiple
@@ -422,13 +423,13 @@ export default function Home() {
                         <Stack className="mt-2" direction="row" spacing={2}>
                           {Object.values(STAT_INDICES).map((stat) => (
                             <StatChip
-                              key={`${filterSpecies}_${stat}`}
+                              key={`${selectedSpecies}_${stat}`}
                               isSummary
                               canFilter
                               creature={
                                 speciesBestStats[selectedSpecies][
                                   filterMap?.id || "allMaps"
-                                ]
+                                ] || {}
                               }
                               stat={stat}
                             />

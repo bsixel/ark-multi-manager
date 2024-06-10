@@ -3,3 +3,9 @@ export type OwnershipInfo = {
   id?: string;
   new?: boolean;
 };
+
+export type ArkMap = {
+  name: string;
+  id: string;
+  order: number;
+};

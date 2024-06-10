@@ -21,9 +21,9 @@ export async function GET(
     // Fetch stuff like the kinds of tamed critters we've seen etc
     const { records } = await driver.executeQuery(
       `
-      MATCH (m:Map)
+      MATCH (map:Map)
       MATCH (oi:OwnershipInfo {id: $ownershipId})
-      OPTIONAL MATCH (map:Map)<-[:ON_MAP]-(bests:BestOf)-[:OWNED_BY]->(oi)
+      OPTIONAL MATCH (map)<-[:ON_MAP]-(bests:BestOf)-[:OWNED_BY]->(oi)
       WITH bests{.*, map: map.name } as bestOfMap, map.name as maps ORDER BY map.order ASC
       RETURN collect(bestOfMap) as bests, collect(distinct maps) as maps`,
       { ownershipId: params.ownershipId }

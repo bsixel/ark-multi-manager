@@ -65,9 +65,9 @@ export async function POST(req) {
       let query = `
       MATCH (oi:OwnershipInfo {id: $ownershipId})
       MATCH (map:Map {name: $map})
-      MERGE (s:Species {blueprintPath: $nodeSafeDinoInfo.blueprintPath})
+      MERGE (s:Species {blueprintPath: $nodeSafeDinoInfo.blueprintPath}) ON CREATE SET s.label = $nodeSafeDinoInfo.species
       MERGE (map)<-[:ON_MAP]-(dino:Dino { dinoId: $nodeSafeDinoInfo.dinoId })-[:OWNED_BY]->(oi) SET dino += $nodeSafeDinoInfo
-      MERGE (map)<-[:ON_MAP]-(statTrack:BestOf)-[:OWNED_BY]->(oi)
+      MERGE (map)<-[:ON_MAP]-(statTrack:BestOf {species: s.label})-[:OWNED_BY]->(oi)
         SET statTrack += {
           species: s.label,
           wildHealth: CASE WHEN coalesce(statTrack.wildHealth, 0) > ${nodeSafeDinoInfo["wildHealth"]} THEN coalesce(statTrack.wildHealth, 0) ELSE ${nodeSafeDinoInfo["wildHealth"]} END,
@@ -87,6 +87,7 @@ export async function POST(req) {
           wildMelee: CASE WHEN coalesce(statTrack.wildMelee, 0) > ${nodeSafeDinoInfo["wildMelee"]} THEN coalesce(statTrack.wildMelee, 0) ELSE ${nodeSafeDinoInfo["wildMelee"]} END,
           mutatedMelee: CASE WHEN coalesce(statTrack.mutatedMelee, 0) > ${nodeSafeDinoInfo["mutatedMelee"]} THEN coalesce(statTrack.mutatedMelee, 0) ELSE ${nodeSafeDinoInfo["mutatedMelee"]} END
       }
+      MERGE (statTrack)-[:MEMBER_OF]->(s)
       MERGE (dino)-[:MEMBER_OF]->(s)`;
 
       let father, mother;
