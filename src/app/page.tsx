@@ -128,6 +128,11 @@ export default function LandingPage() {
             >
               <Autocomplete
                 onChange={(e, value) => {
+                  if (typeof value === "string") {
+                    setOwnershipId(value);
+                  } else if (value.new) {
+                    setOwnershipId(value.id);
+                  }
                   setOwnershipId(
                     (typeof value === "string" ? value : value?.id) || ""
                   );

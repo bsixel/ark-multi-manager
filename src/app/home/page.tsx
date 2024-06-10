@@ -308,6 +308,7 @@ export default function Home() {
               <Stack>
                 <Stack spacing={2} direction={"row"} alignItems={"center"}>
                   <input
+                    disabled={!filterMap?.id}
                     accept=".json"
                     style={{ display: "none" }}
                     id="raised-button-file"
