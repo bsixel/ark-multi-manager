@@ -92,10 +92,10 @@ export async function POST(req) {
 
         query += `
         WITH dino, statTrack
-        MATCH (mother:Dino { dinoId: $mother })-[:OWNED_BY]->(oi)
+        OPTIONAL MATCH (mother:Dino { dinoId: $mother })-[:OWNED_BY]->(oi)
         MERGE (mother)-[m:MOTHER_OF]->(dino)
         WITH dino, statTrack
-        MATCH (father:Dino { dinoId: $father })-[:OWNED_BY]->(oi)
+        OPTIONAL MATCH (father:Dino { dinoId: $father })-[:OWNED_BY]->(oi)
         MERGE (father)-[f:FATHER_OF]->(dino)`;
       }
 
