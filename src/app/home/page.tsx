@@ -310,7 +310,7 @@ export default function Home() {
       }}
     >
       <ReactFlowProvider>
-        <Stack spacing={4} className="pt-20 px-4">
+        <Stack spacing={4} className="pt-20 pb-20 px-4">
           <Card className="pt-2 mx-2 w-full">
             <CardActions
               sx={{
