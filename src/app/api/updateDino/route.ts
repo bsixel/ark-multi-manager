@@ -100,7 +100,7 @@ export async function POST(req) {
       }
 
       query += `
-        RETURN dino, statTrack
+        RETURN "Success"
       `;
 
       const { records } = await driver.executeQuery(query, {
@@ -117,7 +117,10 @@ export async function POST(req) {
 
     console.log(`[${Date.now()}]: Updated ${allDinoInfo.length} creatures`);
     driver.close();
-    return NextResponse.json(results, { status: 201 });
+    return NextResponse.json(
+      { message: `Successfully updated ${results.length} creatures!` },
+      { status: 201 }
+    );
   } catch (err) {
     return NextResponse.json(
       {
