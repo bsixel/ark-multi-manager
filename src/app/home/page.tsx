@@ -238,7 +238,11 @@ export default function Home() {
         map: filterMap.id,
       }),
     })
-      .then(() => {
+      .then(async (resp) => {
+        const respData = await resp.json();
+        if (respData.error) {
+          throw new Error(respData);
+        }
         loadCreatures();
         loadMetadata();
         makeSnack(
