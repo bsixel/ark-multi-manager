@@ -5,6 +5,7 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
 import { themeOptions } from "@/lib/utils/Theme";
 import CssBaseline from "@mui/material/CssBaseline";
 import AppBarLayout from "@/lib/components/layout/appBarLayout";
+import FooterLayout from "@/lib/components/layout/FooterLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,6 +24,7 @@ function RootLayout(props): JSX.Element {
             <CssBaseline />
             <main className="min-h-screen py-2">
               <AppBarLayout>{props.children}</AppBarLayout>
+              <FooterLayout />
             </main>
           </ThemeProvider>
         </AppRouterCacheProvider>
