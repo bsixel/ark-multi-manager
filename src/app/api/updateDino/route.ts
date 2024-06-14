@@ -17,6 +17,8 @@ export async function POST(req) {
       allDinoInfo = [userDinoInfo];
     }
 
+    const impactedSpecies = new Set<string>();
+
     for (
       let dinoEntryIdx = 0;
       dinoEntryIdx < allDinoInfo.length;
@@ -37,7 +39,11 @@ export async function POST(req) {
         tribeName: dinoInfo.TribeName,
         imprintedBy: dinoInfo.ImprinterName,
         blueprintPath: `Blueprint'${dinoInfo.BlueprintPath.slice(0, -2)}'`,
+        father: undefined,
+        mother: undefined,
       };
+
+      impactedSpecies.add(nodeSafeDinoInfo.blueprintPath);
 
       for (let index = 0; index < dinoInfo.Stats.length; index++) {
         // Best way to check if it's an unused stat - the max value will always be zero. Shouldn't ever otherwise?
@@ -57,11 +63,20 @@ export async function POST(req) {
           dinoInfo.Stats[index].Wild + dinoInfo.Stats[index].Mutated;
       }
 
+      let father, mother;
+      if (dinoInfo.Ancestry) {
+        father = `${ownershipId}_${dinoInfo.Ancestry.MaleDinoId1}${dinoInfo.Ancestry.MaleDinoId2}`;
+        mother = `${ownershipId}_${dinoInfo.Ancestry.FemaleDinoId1}${dinoInfo.Ancestry.FemaleDinoId2}`;
+
+        nodeSafeDinoInfo.father = father;
+        nodeSafeDinoInfo.mother = father;
+      }
+
       let query = `
       MATCH (oi:OwnershipInfo {id: $ownershipId})
       MATCH (map:Map {name: $map})
       MERGE (s:Species {blueprintPath: $nodeSafeDinoInfo.blueprintPath}) ON CREATE SET s.label = $fallbackSpecies
-      MERGE (map)<-[:ON_MAP]-(dino:Dino { dinoId: $nodeSafeDinoInfo.dinoId })-[:OWNED_BY]->(oi) SET dino += $nodeSafeDinoInfo
+      MERGE (map)<-[:ON_MAP]-(dino:Dino { dinoId: $nodeSafeDinoInfo.dinoId })-[:OWNED_BY]->(oi) SET dino = $nodeSafeDinoInfo
       MERGE (map)<-[:ON_MAP]-(statTrack:BestOf {species: s.blueprintPath})-[:OWNED_BY]->(oi)
         SET statTrack += {
           species: s.blueprintPath,
@@ -85,11 +100,7 @@ export async function POST(req) {
       MERGE (statTrack)-[:MEMBER_OF]->(s)
       MERGE (dino)-[:MEMBER_OF]->(s)`;
 
-      let father, mother;
       if (dinoInfo.Ancestry) {
-        father = `${ownershipId}_${dinoInfo.Ancestry.MaleDinoId1}${dinoInfo.Ancestry.MaleDinoId2}`;
-        mother = `${ownershipId}_${dinoInfo.Ancestry.FemaleDinoId1}${dinoInfo.Ancestry.FemaleDinoId2}`;
-
         query += `
         WITH dino, statTrack
           MATCH (mother:Dino { dinoId: $mother })-[:OWNED_BY]->(oi)
@@ -114,6 +125,24 @@ export async function POST(req) {
 
       results.push(UnwrapStandard(records));
     }
+
+    // Clean up parent relationships in case creatures aren't uploaded in family order (I do this a lot...)
+    const parentCleanupQuery = `
+      UNWIND $impactedSpecies as speciesPath
+      MATCH (s:Species {blueprintPath: speciesPath})
+      MATCH (oi:OwnershipInfo {id: $ownershipId})<-[:OWNED_BY]-(dino:Dino)-[mo:MEMBER_OF]->(s)
+      WITH dino, oi
+        MATCH (mother:Dino { dinoId: dino.mother })-[:OWNED_BY]->(oi)
+        MERGE (mother)-[m:MOTHER_OF]->(dino)
+      WITH dino, oi
+        MATCH (father:Dino { dinoId: dino.father })-[:OWNED_BY]->(oi)
+        MERGE (father)-[f:FATHER_OF]->(dino)
+      RETURN "Success"
+    `;
+    await driver.executeQuery(parentCleanupQuery, {
+      ownershipId,
+      impactedSpecies: Array.from(impactedSpecies),
+    });
 
     console.log(`[${Date.now()}]: Updated ${allDinoInfo.length} creatures`);
     driver.close();
