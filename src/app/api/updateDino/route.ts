@@ -87,8 +87,8 @@ export async function POST(req) {
 
       let father, mother;
       if (dinoInfo.Ancestry) {
-        father = `${dinoInfo.Ancestry.MaleDinoId1}${dinoInfo.Ancestry.MaleDinoId2}`;
-        mother = `${dinoInfo.Ancestry.FemaleDinoId1}${dinoInfo.Ancestry.FemaleDinoId2}`;
+        father = `${ownershipId}_${dinoInfo.Ancestry.MaleDinoId1}${dinoInfo.Ancestry.MaleDinoId2}`;
+        mother = `${ownershipId}_${dinoInfo.Ancestry.FemaleDinoId1}${dinoInfo.Ancestry.FemaleDinoId2}`;
 
         query += `
         WITH dino, statTrack
