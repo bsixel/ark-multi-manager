@@ -16,7 +16,7 @@ export default function StatChip({
   stat: string;
   creature: Creature | BestOf;
 }) {
-  const { setStatFilters, statFilters, species } = useContext(HomeContext);
+  const { setStatFilters, statFilters } = useContext(HomeContext);
   const prefixes = ["wild", "mutated"];
 
   if (!isSummary) {
@@ -37,14 +37,10 @@ export default function StatChip({
       }}
       onClick={() => {
         if (!canFilter) return;
-        const newStatFilters = {};
-        species.forEach((s) => (newStatFilters[s.blueprintPath] = {}));
+        const newStatFilters = { ...statFilters };
 
-        Object.entries(statFilters).forEach(
-          ([species, stats]) => (newStatFilters[species] = stats)
-        );
         if (newStatFilters[creature.species]?.[stat]) {
-          delete newStatFilters[creature.species][stat];
+          newStatFilters[creature.species][stat] = undefined;
         } else {
           newStatFilters[creature.species][stat] = creature[`wild${stat}`];
         }

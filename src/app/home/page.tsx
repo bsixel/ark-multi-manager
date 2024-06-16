@@ -145,6 +145,12 @@ export default function Home() {
     },
   });
 
+  useEffect(() => {
+    const newStatFilters = {};
+    species.forEach((s) => (newStatFilters[s.blueprintPath] = {}));
+    setStatFilters(newStatFilters);
+  }, [species]);
+
   // Include an option for "all maps"
   const filterMapOptions = useMemo(() => {
     const mappedLoadedMaps = maps.map((map) => {
