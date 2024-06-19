@@ -33,6 +33,7 @@ export async function GET(
     const maps = bestOfRecords[0]["_fields"][1];
     const bestStats = {};
     bestOfRecords[0]["_fields"][0].forEach((bestOfNode) => {
+      // Safe to use just .species since :BestOf uses blueprint on the node
       const nodeSpecies = bestOfNode.species;
       const nodeMap = bestOfNode.map;
       if (!bestStats[nodeSpecies]) {

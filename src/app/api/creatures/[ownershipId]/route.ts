@@ -66,11 +66,11 @@ export async function GET(
 
       // Sanitize name/species
       creature.name = creature.name.replace("_", " ");
-      creature.species = creature.speciesLabel.replace("_", " ");
+      creature.speciesLabel = creature.speciesLabel.replace("_", " ");
 
       // Map all unique colors per species
-      if (!speciesColors[creature.species]) {
-        speciesColors[creature.species] = [
+      if (!speciesColors[creature.blueprintPath]) {
+        speciesColors[creature.blueprintPath] = [
           new Set<number>([0]),
           new Set<number>([0]),
           new Set<number>([0]),
@@ -81,7 +81,7 @@ export async function GET(
         ];
       }
       creature.colors.forEach((color, idx) => {
-        speciesColors[creature.species][idx].add(color);
+        speciesColors[creature.blueprintPath][idx].add(color);
       });
 
       const motherId = creature.mother;

@@ -14,6 +14,7 @@ export interface Creature {
   dinoId: string;
   species: string | undefined;
   speciesLabel: string | undefined;
+  blueprintPath: string | undefined;
   map: string | undefined;
   gender: string | undefined;
   neutered: boolean;
