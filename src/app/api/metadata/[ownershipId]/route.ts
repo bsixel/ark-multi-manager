@@ -69,7 +69,10 @@ export async function GET(
     driver.close();
     return NextResponse.json(
       {
-        species: UnwrapStandard(speciesRecords),
+        species: UnwrapStandard(speciesRecords).map((s) => ({
+          ...s,
+          label: s.label.replace("_", " "),
+        })),
         bestStats,
         maps,
       },
