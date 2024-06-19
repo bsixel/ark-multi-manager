@@ -224,7 +224,14 @@ export default function Home() {
       }
       return true;
     });
-  }, [creatures, filterSpecies, filterMap, statFilters, colorFilters]);
+  }, [
+    creatures,
+    selectedCreatures,
+    filterSpecies,
+    filterMap.id,
+    statFilters,
+    colorFilters,
+  ]);
 
   const handleDinoUpload = async (event) => {
     const dinos = [];
