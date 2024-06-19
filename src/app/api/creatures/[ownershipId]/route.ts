@@ -64,6 +64,10 @@ export async function GET(
     records.forEach((record) => {
       const creature = record["_fields"][0] as Creature;
 
+      // Sanitize name/species
+      creature.name = creature.name.replace("_", " ");
+      creature.species = creature.speciesLabel.replace("_", " ");
+
       // Map all unique colors per species
       if (!speciesColors[creature.species]) {
         speciesColors[creature.species] = [
