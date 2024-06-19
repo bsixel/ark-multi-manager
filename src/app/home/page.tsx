@@ -196,6 +196,8 @@ export default function Home() {
 
   const filteredCreatures = useMemo(() => {
     return creatures.filter((creature) => {
+      // ALWAYS show selected creatures
+      if (selectedCreatures.includes(creature.dinoId)) return true;
       if (
         filterSpecies.length &&
         !filterSpecies.find((s) => creature.species == s.blueprintPath)
