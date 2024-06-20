@@ -47,6 +47,7 @@ import { GlobalContext } from "@/lib/components/layout/appBarLayout";
 import ColorChip from "@/lib/components/display/ColorChip";
 import { DINO_COLORS } from "@/lib/utils/ColorMappings";
 import { Species } from "@/lib/types/global";
+import { useDebounce } from "@/lib/hooks/useDebounce";
 
 type MetadataDefinition = {
   bestStats: BestOf[];
@@ -117,7 +118,11 @@ export default function Home() {
     useState<GridRowSelectionModel>([]);
   const [filterSpecies, setFilterSpecies] = useState<Species[]>([]);
   const [filterMap, setFilterMap] = useState(null);
-  const [statFilters, setStatFilters] = useState({});
+  const [freeSearch, setFreeSearch] = useState<string>(null);
+  const freeSearchDebounced = useDebounce(freeSearch, 400);
+  const [statFilters, setStatFilters] = useState<Record<string, StatFilter>>(
+    {}
+  );
   const [colorFilters, setColorFilters] = useState<ColorFilter>({});
   const [uploadInProgress, setUploadInProgress] = useState<boolean>(false);
 
@@ -196,6 +201,8 @@ export default function Home() {
 
   const filteredCreatures = useMemo(() => {
     return creatures.filter((creature) => {
+      // Yeah, I know this is a bad idea... whatever.
+      const stringifiedCreature = JSON.stringify(creature);
       // ALWAYS show selected creatures
       if (selectedCreatures.includes(creature.dinoId)) return true;
       if (
@@ -222,15 +229,20 @@ export default function Home() {
           return false;
         }
       }
+      const freeSearchReg = new RegExp(freeSearchDebounced, "gi");
+      if (freeSearchDebounced && !stringifiedCreature.match(freeSearchReg)) {
+        return false;
+      }
       return true;
     });
   }, [
     creatures,
     selectedCreatures,
     filterSpecies,
-    filterMap.id,
+    filterMap?.id,
     statFilters,
     colorFilters,
+    freeSearchDebounced,
   ]);
 
   const handleDinoUpload = async (event) => {
@@ -548,6 +560,21 @@ export default function Home() {
                     </Grid>
                   ))}
                 </Grid>
+              </div>
+              <div className="px-2 pb-4">
+                <TextField
+                  className="w-full"
+                  key={`free-search-textfield`}
+                  label="Search..."
+                  onChange={(event) => {
+                    if (!event?.target?.value) {
+                      // TODO: Should we clear the value here or set it to default?
+                      setFreeSearch(null);
+                      return;
+                    }
+                    setFreeSearch(event?.target?.value);
+                  }}
+                />
               </div>
               <div hidden={currentTab !== 0} className="w-full h-full px-2">
                 <CreatureListingTab />
