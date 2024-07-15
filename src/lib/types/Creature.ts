@@ -28,7 +28,6 @@ export interface Creature {
   mother: string | undefined;
   father: string | undefined;
   bestOfParents: boolean;
-  uselessChild: boolean;
   wildHealth: number;
   mutatedHealth: number;
   combinedBaseHealth: number;

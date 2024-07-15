@@ -39,9 +39,7 @@ export default function CritterTable() {
   return (
     <DataGrid
       getRowClassName={({ row }) => {
-        if (row.uselessChild) {
-          return "uselessChild";
-        } else if (row.bestOfParents) {
+        if (row.bestOfParents) {
           return "bestOfParents";
         }
       }}
@@ -77,12 +75,6 @@ export default function CritterTable() {
           backgroundColor: "#233058",
           color: "white",
           fontWeight: "bold",
-        },
-        ".uselessChild": {
-          bgcolor: "#854a57",
-        },
-        ".uselessChild:hover": {
-          bgcolor: "#4f2931",
         },
         ".bestOfParents": {
           bgcolor: "#6ca379",

@@ -74,8 +74,6 @@ export const lifeStatusIcon = (
 const getCardShadow = (creature: Creature) => {
   if (creature.bestOfParents) {
     return "10px 5px 5px #6ca379";
-  } else if (creature.uselessChild) {
-    return "10px 5px 5px #854a57";
   } else return null;
 };
 

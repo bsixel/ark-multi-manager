@@ -27,13 +27,6 @@ export async function GET(
             d.combinedBaseSpeed >= mother.combinedBaseSpeed AND d.combinedBaseSpeed >= father.combinedBaseSpeed AND
             d.combinedBaseWeight >= mother.combinedBaseWeight AND d.combinedBaseWeight >= father.combinedBaseWeight AND
             d.combinedBaseMelee >= mother.combinedBaseMelee AND d.combinedBaseMelee >= father.combinedBaseMelee) as bestOfParents,
-            (d.combinedBaseHealth = min([mother.combinedBaseHealth, father.combinedBaseHealth]) AND
-            d.combinedBaseStamina = min([mother.combinedBaseStamina, father.combinedBaseStamina]) AND
-            d.combinedBaseOxygen = min([mother.combinedBaseOxygen, father.combinedBaseOxygen]) AND
-            d.combinedBaseFood = min([mother.combinedBaseFood, father.combinedBaseFood]) AND
-            d.combinedBaseSpeed = min([mother.combinedBaseSpeed, father.combinedBaseSpeed]) AND
-            d.combinedBaseWeight = min([mother.combinedBaseWeight, father.combinedBaseWeight]) AND
-            d.combinedBaseMelee = min([mother.combinedBaseMelee, father.combinedBaseMelee])) as uselessChild,
             d.wildHealth = bestOfSpecies.wildHealth AND bestOfSpecies.wildHealth <> 0 as hasBestWildHealth,
             d.mutatedHealth = bestOfSpecies.mutatedHealth AND bestOfSpecies.mutatedHealth <> 0 as hasBestMutatedHealth,
             d.wildStamina = bestOfSpecies.wildStamina AND bestOfSpecies.wildStamina <> 0 as hasBestWildStamina,
@@ -48,7 +41,7 @@ export async function GET(
             d.mutatedWeight = bestOfSpecies.mutatedWeight AND bestOfSpecies.mutatedWeight <> 0 as hasBestMutatedWeight,
             d.wildMelee = bestOfSpecies.wildMelee AND bestOfSpecies.wildMelee <> 0 as hasBestWildMelee,
             d.mutatedMelee = bestOfSpecies.mutatedMelee AND bestOfSpecies.mutatedMelee <> 0 as hasBestMutatedMelee
-          WITH d{.*, species: s.blueprintPath, speciesLabel: s.label, map: map.name, bestOfParents: bestOfParents, mother: mother.dinoId, father: father.dinoId, hasBestWildHealth, hasBestWildStamina, hasBestWildOxygen, hasBestWildFood, hasBestWildSpeed, hasBestWildWeight, hasBestWildMelee, hasBestMutatedHealth, hasBestMutatedStamina, hasBestMutatedOxygen, hasBestMutatedFood, hasBestMutatedSpeed, hasBestMutatedWeight, hasBestMutatedMelee, hasBestOfSomeStat: hasBestWildHealth OR hasBestWildStamina OR hasBestWildOxygen OR hasBestWildFood OR hasBestWildSpeed OR hasBestWildWeight OR hasBestWildMelee } as dinoInfo
+          WITH d{.*, species: s.blueprintPath, speciesLabel: s.label, map: map.name, bestOfParents: bestOfParents, hasBestWildHealth, hasBestWildStamina, hasBestWildOxygen, hasBestWildFood, hasBestWildSpeed, hasBestWildWeight, hasBestWildMelee, hasBestMutatedHealth, hasBestMutatedStamina, hasBestMutatedOxygen, hasBestMutatedFood, hasBestMutatedSpeed, hasBestMutatedWeight, hasBestMutatedMelee, hasBestOfSomeStat: hasBestWildHealth OR hasBestWildStamina OR hasBestWildOxygen OR hasBestWildFood OR hasBestWildSpeed OR hasBestWildWeight OR hasBestWildMelee } as dinoInfo
     RETURN dinoInfo ORDER BY dinoInfo.speciesLabel ASC, dinoInfo.baseLevel DESC, dinoInfo.name ASC
     `;
 
@@ -63,6 +56,11 @@ export async function GET(
 
     records.forEach((record) => {
       const creature = record["_fields"][0] as Creature;
+
+      if (creatures.get(creature.dinoId)) {
+        // idk why there's dupes and I'm tired of trying to figure it out
+        return; // Skip it's already there
+      }
 
       // Sanitize name/species
       creature.name = creature.name.replace("_", " ");
