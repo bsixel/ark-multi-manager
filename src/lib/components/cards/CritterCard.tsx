@@ -152,7 +152,7 @@ export default function CritterCard({
               <Grid container spacing={2} columns={3}>
                 {Object.values(STAT_INDICES).map((stat) => (
                   <Grid key={`${creature.dinoId}_${stat}`}>
-                    <StatChip creature={creature} stat={stat} />
+                    <StatChip creature={creature} stat={stat} canFilter />
                   </Grid>
                 ))}
               </Grid>

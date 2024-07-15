@@ -78,6 +78,7 @@ export type BestOf = {
   mutatedWeight: number;
   wildMelee: number;
   mutatedMelee: number;
+  map?: string;
 };
 
 export const defaultBestOf = (species): BestOf => ({

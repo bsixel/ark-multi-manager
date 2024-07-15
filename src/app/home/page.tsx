@@ -326,7 +326,7 @@ export default function Home() {
       stat: string | null
     ) => {
       const creatureSpecies = creature.blueprintPath || creature.species;
-      const bestOfForMap = speciesBestStats[creatureSpecies][creature.map];
+      const bestOfForMap = speciesBestStats[creatureSpecies][filterMap.id];
 
       if (type && stat) {
         const creatureStat = creature[`${type}${stat}`];
@@ -340,7 +340,7 @@ export default function Home() {
         );
       }
     },
-    [speciesBestStats]
+    [speciesBestStats, filterMap]
   );
 
   return ownershipInfo?.id && ownershipInfo?.name ? (

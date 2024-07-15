@@ -37,7 +37,8 @@ export default function StatChip({
   const skippedFields = ["Torpor", "Speed"];
   const label = (
     <div className="pl-2">
-      {numberElement("wild")} | {numberElement("mutated")} |{" "}
+      {numberElement("wild")} | {numberElement("mutated")}
+      {!isSummary ? "| " : null}
       {numberElement("leveled")}
     </div>
   );
