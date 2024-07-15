@@ -89,8 +89,13 @@ export default function CritterCard({
   backgroundColor?: string;
 }) {
   const { ownershipInfo } = useContext(GlobalContext);
-  const { selectedCreatures, setSelectedCreatures, loadCreatures, species } =
-    useContext(HomeContext);
+  const {
+    selectedCreatures,
+    setSelectedCreatures,
+    loadCreatures,
+    species,
+    hasBest,
+  } = useContext(HomeContext);
 
   const { value: showStats, toggle: toggleShowStats } = useToggle(false);
 
@@ -109,7 +114,7 @@ export default function CritterCard({
             {genderedIcon(creature)}
           </Typography>
           <div>
-            {creature.hasBestOfSomeStat ? SomeMaxStar : null}
+            {hasBest(creature, null, null) ? SomeMaxStar : null}
             {creature.favorite ? <FavoriteIcon color="warning" /> : null}
             {lifeStatusIcon(creature, ownershipInfo, loadCreatures)}
           </div>

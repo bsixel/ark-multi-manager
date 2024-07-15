@@ -10,42 +10,70 @@ export default function StatChip({
   canFilter,
   stat,
   creature,
+  justLabel,
 }: {
   isSummary?: boolean;
   canFilter?: boolean;
   stat: string;
   creature: Creature | BestOf;
+  justLabel?: boolean;
 }) {
-  const { setStatFilters, statFilters } = useContext(HomeContext);
+  const { setStatFilters, statFilters, hasBest } = useContext(HomeContext);
   const prefixes = ["wild", "mutated"];
 
   if (!isSummary) {
     prefixes.push("leveled");
   }
 
+  const numberElement = (type) =>
+    type !== "leveled" && hasBest(creature as Creature, type, stat) ? (
+      <i>
+        <strong> {creature[`${type}${stat}`]} </strong>
+      </i>
+    ) : (
+      creature[`${type}${stat}`]
+    );
+
   const skippedFields = ["Torpor", "Speed"];
-
-  return !skippedFields.includes(stat) ? (
-    <Chip
-      key={`stat_${stat}`}
-      className="w-fit"
-      label={`${stat}: ${prefixes.map((p) => creature?.[`${p}${stat}`] || 0).join(" | ")}`}
-      icon={statFilters[creature.species]?.[stat] ? <FilterAlt /> : null}
-      sx={{
-        backgroundColor:
-          isSummary || creature[`hasBestWild${stat}`] ? "#6ca379" : "#1A2027",
-      }}
-      onClick={() => {
-        if (!canFilter) return;
-        const newStatFilters = { ...statFilters };
-
-        if (newStatFilters[creature.species]?.[stat]) {
-          newStatFilters[creature.species][stat] = undefined;
-        } else {
-          newStatFilters[creature.species][stat] = creature[`wild${stat}`];
+  const label = (
+    <div className="pl-2">
+      {numberElement("wild")} | {numberElement("mutated")} |{" "}
+      {numberElement("leveled")}
+    </div>
+  );
+  if (justLabel) {
+    return label;
+  } else if (!skippedFields.includes(stat)) {
+    return (
+      <Chip
+        key={`stat_${stat}`}
+        className="w-fit"
+        label={
+          <label className="flex flex-row">
+            {stat}: {label}
+          </label>
         }
-        setStatFilters(newStatFilters);
-      }}
-    />
-  ) : null;
+        icon={statFilters[creature.species]?.[stat] ? <FilterAlt /> : null}
+        sx={{
+          backgroundColor:
+            isSummary || hasBest(creature as Creature, "wild", stat)
+              ? "#6ca379"
+              : "#1A2027",
+        }}
+        onClick={() => {
+          if (!canFilter) return;
+          const newStatFilters = { ...statFilters };
+
+          if (newStatFilters[creature.species]?.[stat]) {
+            newStatFilters[creature.species][stat] = undefined;
+          } else {
+            newStatFilters[creature.species][stat] = creature[`wild${stat}`];
+          }
+          setStatFilters(newStatFilters);
+        }}
+      />
+    );
+  } else {
+    return null;
+  }
 }

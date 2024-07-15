@@ -26,22 +26,8 @@ export async function GET(
             d.combinedBaseFood >= mother.combinedBaseFood AND d.combinedBaseFood >= father.combinedBaseFood AND
             d.combinedBaseSpeed >= mother.combinedBaseSpeed AND d.combinedBaseSpeed >= father.combinedBaseSpeed AND
             d.combinedBaseWeight >= mother.combinedBaseWeight AND d.combinedBaseWeight >= father.combinedBaseWeight AND
-            d.combinedBaseMelee >= mother.combinedBaseMelee AND d.combinedBaseMelee >= father.combinedBaseMelee) as bestOfParents,
-            d.wildHealth = bestOfSpecies.wildHealth AND bestOfSpecies.wildHealth <> 0 as hasBestWildHealth,
-            d.mutatedHealth = bestOfSpecies.mutatedHealth AND bestOfSpecies.mutatedHealth <> 0 as hasBestMutatedHealth,
-            d.wildStamina = bestOfSpecies.wildStamina AND bestOfSpecies.wildStamina <> 0 as hasBestWildStamina,
-            d.mutatedStamina = bestOfSpecies.mutatedStamina AND bestOfSpecies.mutatedStamina <> 0 as hasBestMutatedStamina,
-            d.wildOxygen = bestOfSpecies.wildOxygen AND bestOfSpecies.wildOxygen <> 0 as hasBestWildOxygen,
-            d.mutatedOxygen = bestOfSpecies.mutatedOxygen AND bestOfSpecies.mutatedOxygen <> 0 as hasBestMutatedOxygen,
-            d.wildFood = bestOfSpecies.wildFood AND bestOfSpecies.wildFood <> 0 as hasBestWildFood,
-            d.mutatedFood = bestOfSpecies.mutatedFood AND bestOfSpecies.mutatedFood <> 0 as hasBestMutatedFood,
-            d.wildSpeed = bestOfSpecies.wildSpeed AND bestOfSpecies.wildSpeed <> 0 as hasBestWildSpeed,
-            d.mutatedSpeed = bestOfSpecies.mutatedSpeed AND bestOfSpecies.mutatedSpeed <> 0 as hasBestMutatedSpeed,
-            d.wildWeight = bestOfSpecies.wildWeight AND bestOfSpecies.wildWeight <> 0 as hasBestWildWeight,
-            d.mutatedWeight = bestOfSpecies.mutatedWeight AND bestOfSpecies.mutatedWeight <> 0 as hasBestMutatedWeight,
-            d.wildMelee = bestOfSpecies.wildMelee AND bestOfSpecies.wildMelee <> 0 as hasBestWildMelee,
-            d.mutatedMelee = bestOfSpecies.mutatedMelee AND bestOfSpecies.mutatedMelee <> 0 as hasBestMutatedMelee
-          WITH d{.*, species: s.blueprintPath, speciesLabel: s.label, map: map.name, bestOfParents: bestOfParents, hasBestWildHealth, hasBestWildStamina, hasBestWildOxygen, hasBestWildFood, hasBestWildSpeed, hasBestWildWeight, hasBestWildMelee, hasBestMutatedHealth, hasBestMutatedStamina, hasBestMutatedOxygen, hasBestMutatedFood, hasBestMutatedSpeed, hasBestMutatedWeight, hasBestMutatedMelee, hasBestOfSomeStat: hasBestWildHealth OR hasBestWildStamina OR hasBestWildOxygen OR hasBestWildFood OR hasBestWildSpeed OR hasBestWildWeight OR hasBestWildMelee } as dinoInfo
+            d.combinedBaseMelee >= mother.combinedBaseMelee AND d.combinedBaseMelee >= father.combinedBaseMelee) as bestOfParents
+          WITH d{.*, species: s.blueprintPath, speciesLabel: s.label, map: map.name, bestOfParents: bestOfParents } as dinoInfo
     RETURN dinoInfo ORDER BY dinoInfo.speciesLabel ASC, dinoInfo.baseLevel DESC, dinoInfo.name ASC
     `;
 

@@ -68,14 +68,6 @@ export interface Creature {
   combinedBaseMelee: number;
   leveledMelee: number;
   maxMelee: number;
-  hasBestHealth: boolean;
-  hasBestStamina: boolean;
-  hasBestOxygen: boolean;
-  hasBestFood: boolean;
-  hasBestSpeed: boolean;
-  hasBestWeight: boolean;
-  hasBestMelee: boolean;
-  hasBestOfSomeStat: boolean;
 }
 
 export type SpeciesColorsMap = {

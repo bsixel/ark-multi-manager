@@ -107,6 +107,11 @@ export type HomeContextDefinition = {
   setStatFilters: (newFilters: Record<string, StatFilter>) => void;
   colorFilters: ColorFilter;
   setColorFilters: (newFilters: ColorFilter) => void;
+  hasBest: (
+    creature: Creature,
+    type: "wild" | "mutated" | null,
+    stat: string | null
+  ) => boolean;
 };
 
 export const HomeContext = createContext<HomeContextDefinition>(null);
@@ -314,6 +319,30 @@ export default function Home() {
     [speciesBestStats, filterMap]
   );
 
+  const hasBest = useCallback(
+    (
+      creature: Creature,
+      type: "wild" | "mutated" | null,
+      stat: string | null
+    ) => {
+      const creatureSpecies = creature.blueprintPath || creature.species;
+      const bestOfForMap = speciesBestStats[creatureSpecies][creature.map];
+
+      if (type && stat) {
+        const creatureStat = creature[`${type}${stat}`];
+        // Shouldn't be  > but just in case
+        return (
+          creatureStat > 0 && creatureStat >= bestOfForMap[`${type}${stat}`]
+        );
+      } else {
+        return Object.keys(bestOfForMap).some(
+          (fullStatKey) => creature[fullStatKey] >= bestOfForMap[fullStatKey]
+        );
+      }
+    },
+    [speciesBestStats]
+  );
+
   return ownershipInfo?.id && ownershipInfo?.name ? (
     <HomeContext.Provider
       value={{
@@ -334,6 +363,7 @@ export default function Home() {
         setStatFilters,
         colorFilters,
         setColorFilters,
+        hasBest,
       }}
     >
       <ReactFlowProvider>

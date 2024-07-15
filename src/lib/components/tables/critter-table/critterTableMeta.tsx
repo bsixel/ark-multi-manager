@@ -5,6 +5,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import { genderedIcon, lifeStatusIcon } from "../../cards/CritterCard";
 import ColorChip from "../../display/ColorChip";
 import { Stack } from "@mui/material";
+import StatChip from "../../display/StatChip";
 
 export type LimitedCreature = Omit<Creature, "tribeName">;
 
@@ -110,21 +111,9 @@ Object.values(STAT_INDICES).forEach((stat) => {
       headerName: stat,
       width: 120,
       valueGetter: (v, row) => row[`combinedBase${stat}`],
-      renderCell: (params) => {
-        const creature = params.row;
-        const statString = `${creature[`wild${stat}`]} | ${creature[`mutated${stat}`]} | ${creature[`leveled${stat}`]}`;
-        return (
-          <div>
-            {creature[`hasBestWild${stat}`] ? (
-              <i>
-                <strong> {statString} </strong>
-              </i>
-            ) : (
-              <label>{statString}</label>
-            )}
-          </div>
-        );
-      },
+      renderCell: (params) => (
+        <StatChip stat={stat} creature={params.row} justLabel />
+      ),
     },
     {
       field: `wild${stat}`,
