@@ -675,6 +675,12 @@ export const creatureMappings = [
       "Blueprint'/Game/PrimalEarth/Dinos/Raptor/Uberraptor/Deinonychus_Character_BP.Deinonychus_Character_BP'",
   },
   {
+    label: "Deinosuchus",
+    primalName: "DeinosuchusASA_Character_BP",
+    blueprintPath:
+      "Blueprint'/Game/ASA/Dinos/Deinosuchus/DeinosuchusASA_Character_BP.DeinosuchusASA_Character_BP_C'",
+  },
+  {
     label: "Desert Titan",
     primalName: "DesertKaiju_Character_BP_C",
     blueprintPath:
