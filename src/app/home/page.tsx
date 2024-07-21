@@ -49,6 +49,8 @@ import { DINO_COLORS } from "@/lib/utils/ColorMappings";
 import { Species } from "@/lib/types/global";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 
+const ALL_MAPS = { label: "All Maps", id: null };
+
 type MetadataDefinition = {
   bestStats: BestOf[];
   species: Species[];
@@ -169,7 +171,7 @@ export default function Home() {
         id: map,
       };
     });
-    mappedLoadedMaps.push({ label: "All Maps", id: null });
+    mappedLoadedMaps.push(ALL_MAPS);
     return mappedLoadedMaps;
   }, [maps]);
 
@@ -193,7 +195,9 @@ export default function Home() {
     const locallyStoredFilterMapAsOption = filterMapOptions.find(
       (m) => m.id == locallyStoredFilterMap
     );
-    setFilterMap(locallyStoredFilterMapAsOption || filterMapOptions[0]);
+    setFilterMap(
+      locallyStoredFilterMapAsOption || filterMapOptions[0] || ALL_MAPS
+    );
   }, [maps, filterMapOptions]);
 
   const selectedCreaturesData = useMemo(() => {
@@ -327,6 +331,7 @@ export default function Home() {
     ) => {
       const creatureSpecies = creature.blueprintPath || creature.species;
       const bestOfForMap = speciesBestStats[creatureSpecies][filterMap.id];
+      if (!bestOfForMap) return false; // In case we're missing data
 
       if (type && stat) {
         const creatureStat = creature[`${type}${stat}`];
