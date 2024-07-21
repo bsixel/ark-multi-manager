@@ -101,7 +101,7 @@ export type HomeContextDefinition = {
   handleDinoUpload: (event) => void;
   species: Species[];
   filterSpecies: Species[];
-  filterMap: string;
+  filterMap: { label: string; id: string };
   speciesBestStats: BestOf[];
   statFilters: Record<string, StatFilter>;
   setStatFilters: (newFilters: Record<string, StatFilter>) => void;
@@ -122,7 +122,7 @@ export default function Home() {
   const [selectedCreatures, setSelectedCreatures] =
     useState<GridRowSelectionModel>([]);
   const [filterSpecies, setFilterSpecies] = useState<Species[]>([]);
-  const [filterMap, setFilterMap] = useState(null);
+  const [filterMap, setFilterMap] = useState({ label: "All Maps", id: null });
   const [freeSearch, setFreeSearch] = useState<string>(null);
   const freeSearchDebounced = useDebounce(freeSearch, 400);
   const [statFilters, setStatFilters] = useState<Record<string, StatFilter>>(
