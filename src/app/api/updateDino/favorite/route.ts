@@ -7,16 +7,20 @@ export async function POST(req) {
   try {
     const { driver } = createSession();
 
+    const now = Date.now();
+
     const { ownershipId, dinoId, shouldFavorite } = userDinoInfo;
 
     const { records } = await driver.executeQuery(
       `MATCH (oi:OwnershipInfo {id: $ownershipId})
        MATCH (d:Dino {dinoId: $dinoId})-[:OWNED_BY]->(oi)
-        SET d.favorite = $shouldFavorite RETURN d`,
+        SET d.favorite = $shouldFavorite, d.updated: $now
+        RETURN d`,
       {
         ownershipId,
         dinoId,
         shouldFavorite,
+        now,
       }
     );
 

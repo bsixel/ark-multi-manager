@@ -1,7 +1,7 @@
 import { Creature } from "@/lib/types/Creature";
 import { DataGrid, GridColumnVisibilityModel } from "@mui/x-data-grid";
 import { critterColumns, defaultHiddenCritterCols } from "./critterTableMeta";
-import { useContext, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { HomeContext } from "@/app/home/page";
 import { DEFAULT_POST_OPTIONS } from "@/lib/utils/ApiHelper";
 import { GlobalContext } from "../../layout/appBarLayout";
@@ -14,11 +14,10 @@ export default function CritterTable() {
     filteredCreatures,
     selectedCreatures,
     setSelectedCreatures,
+    maps,
   } = useContext(HomeContext);
   const [columnVisibilityModel, setColumnVisibilityModel] =
-    useState<GridColumnVisibilityModel>(
-      Object.fromEntries(defaultHiddenCritterCols.map((c) => [c, false]))
-    );
+    useState<GridColumnVisibilityModel>(defaultHiddenCritterCols());
 
   const handleRowUpdate = async (updatedCreature, ogCreature) => {
     if (updatedCreature.name != ogCreature.name) {
@@ -33,8 +32,31 @@ export default function CritterTable() {
       const newCreatureResp = await resp.json();
       console.log(`Updated ${ogCreature.dinoId} to`, newCreatureResp[0]);
       return newCreatureResp[0];
+    } else if (updatedCreature.map != ogCreature.map) {
+      if (updatedCreature.map) {
+        const resp = await fetch("/api/updateDino/map", {
+          ...DEFAULT_POST_OPTIONS,
+          body: JSON.stringify({
+            ownershipId: ownershipInfo.id,
+            newMap: updatedCreature.map,
+            dinoId: ogCreature.dinoId,
+          }),
+        });
+        const newCreatureResp = await resp.json();
+        console.log(`Updated ${ogCreature.dinoId} to`, newCreatureResp[0]);
+        return newCreatureResp[0];
+      } else {
+        updatedCreature.map = ogCreature.map;
+        return updatedCreature;
+      }
     }
   };
+
+  const critterColumnsToUse = useMemo(() => {
+    return critterColumns(
+      maps.filter((m) => !!m.id).map((m) => ({ ...m, key: m.id, value: m.id }))
+    );
+  }, [maps]);
 
   return (
     <DataGrid
@@ -85,8 +107,8 @@ export default function CritterTable() {
       }}
       loading={loading}
       rows={filteredCreatures}
-      columns={critterColumns}
-      getRowId={(r: Creature) => r.dinoId}
+      columns={critterColumnsToUse}
+      getRowId={(r: Creature) => r?.dinoId || -1}
       initialState={{
         pagination: {
           paginationModel: {
@@ -96,7 +118,7 @@ export default function CritterTable() {
       }}
       processRowUpdate={handleRowUpdate}
       onProcessRowUpdateError={(err) => console.log(err)}
-      isCellEditable={(c) => c.field == "name"}
+      isCellEditable={(c) => ["name", "map"].includes(c.field)}
       pageSizeOptions={[5, 10, 25, 50, 100]}
       checkboxSelection
       disableDensitySelector={false}

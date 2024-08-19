@@ -27,7 +27,7 @@ export async function GET(
             d.combinedBaseSpeed >= mother.combinedBaseSpeed AND d.combinedBaseSpeed >= father.combinedBaseSpeed AND
             d.combinedBaseWeight >= mother.combinedBaseWeight AND d.combinedBaseWeight >= father.combinedBaseWeight AND
             d.combinedBaseMelee >= mother.combinedBaseMelee AND d.combinedBaseMelee >= father.combinedBaseMelee) as bestOfParents
-          WITH d{.*, species: s.blueprintPath, speciesLabel: s.label, map: map.name, bestOfParents: bestOfParents } as dinoInfo
+          WITH d{.*, species: s.blueprintPath, speciesLabel: s.label, map: map.id, bestOfParents: bestOfParents } as dinoInfo
     RETURN dinoInfo ORDER BY dinoInfo.speciesLabel ASC, dinoInfo.baseLevel DESC, dinoInfo.name ASC
     `;
 

@@ -1,3 +1,4 @@
+import { createSession, UnwrapStandard } from "@/lib/utils/ApiHelper";
 import { NextResponse } from "next/server";
 // Run through https://jsonformatter.curiousconcept.com/# if we want quoted properties which apparently some places complain about
 export const arkMappings = [
@@ -19,5 +20,20 @@ export const arkMappings = [
 ];
 
 export async function GET() {
-  return NextResponse.json(arkMappings, { status: 201 });
+  try {
+    const { driver } = createSession();
+
+    const { records } = await driver.executeQuery(`MATCH (m:Map) RETURN m`);
+
+    driver.close();
+    return NextResponse.json(UnwrapStandard(records), { status: 201 });
+  } catch (err) {
+    return NextResponse.json(
+      {
+        error: err?.message ?? "Unknown",
+        message: "Unable to fetch maps!",
+      },
+      { status: 500 }
+    );
+  }
 }

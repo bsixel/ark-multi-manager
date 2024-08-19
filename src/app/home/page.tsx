@@ -23,6 +23,11 @@ import {
   SelectChangeEvent,
   Typography,
   Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2";
 import { GridRowSelectionModel } from "@mui/x-data-grid";
@@ -46,15 +51,23 @@ import StatChip from "@/lib/components/display/StatChip";
 import { GlobalContext } from "@/lib/components/layout/appBarLayout";
 import ColorChip from "@/lib/components/display/ColorChip";
 import { DINO_COLORS } from "@/lib/utils/ColorMappings";
-import { Species } from "@/lib/types/global";
+import { ArkMap, Species } from "@/lib/types/global";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 
-const ALL_MAPS = { label: "All Maps", id: null };
+type FilterMapOption = ArkMap & {
+  label: string;
+};
+const ALL_MAPS: FilterMapOption = {
+  name: "All Maps",
+  id: null,
+  order: -1,
+  label: "All Maps",
+};
 
 type MetadataDefinition = {
   bestStats: BestOf[];
   species: Species[];
-  maps: string[];
+  maps: ArkMap[];
 };
 
 type CreatureFetchPayload = {
@@ -103,6 +116,7 @@ export type HomeContextDefinition = {
   handleDinoUpload: (event) => void;
   species: Species[];
   filterSpecies: Species[];
+  maps: ArkMap[];
   filterMap: { label: string; id: string };
   speciesBestStats: BestOf[];
   statFilters: Record<string, StatFilter>;
@@ -124,7 +138,7 @@ export default function Home() {
   const [selectedCreatures, setSelectedCreatures] =
     useState<GridRowSelectionModel>([]);
   const [filterSpecies, setFilterSpecies] = useState<Species[]>([]);
-  const [filterMap, setFilterMap] = useState({ label: "All Maps", id: null });
+  const [filterMap, setFilterMap] = useState<FilterMapOption>(ALL_MAPS);
   const [freeSearch, setFreeSearch] = useState<string>(null);
   const freeSearchDebounced = useDebounce(freeSearch, 400);
   const [statFilters, setStatFilters] = useState<Record<string, StatFilter>>(
@@ -132,6 +146,12 @@ export default function Home() {
   );
   const [colorFilters, setColorFilters] = useState<ColorFilter>({});
   const [uploadInProgress, setUploadInProgress] = useState<boolean>(false);
+  const [showMapDialog, setShowMapDialog] = useState<boolean>(false);
+  const [newMap, setNewMap] = useState<ArkMap>({
+    name: "",
+    id: "",
+    order: -1,
+  });
 
   // Load some stored defaults
 
@@ -145,7 +165,7 @@ export default function Home() {
   });
 
   const {
-    queryResult: { species, bestStats: speciesBestStats, maps: maps },
+    queryResult: { species, bestStats: speciesBestStats, maps: backendMaps },
     exec: loadMetadata,
     isLoading: loadingMeta,
   } = useQuery<MetadataDefinition>({
@@ -164,16 +184,12 @@ export default function Home() {
   }, [species]);
 
   // Include an option for "all maps"
-  const filterMapOptions = useMemo(() => {
-    const mappedLoadedMaps = maps.map((map) => {
-      return {
-        label: map,
-        id: map,
-      };
-    });
-    mappedLoadedMaps.push(ALL_MAPS);
-    return mappedLoadedMaps;
-  }, [maps]);
+  const filterMapOptions = useMemo((): FilterMapOption[] => {
+    return [...backendMaps, ALL_MAPS].map((m) => ({
+      ...m,
+      label: m.name,
+    }));
+  }, [backendMaps]);
 
   const optionableSpecies = useMemo(() => {
     // Only show species for relevant map / that exist at all so far
@@ -198,7 +214,7 @@ export default function Home() {
     setFilterMap(
       locallyStoredFilterMapAsOption || filterMapOptions[0] || ALL_MAPS
     );
-  }, [maps, filterMapOptions]);
+  }, [filterMapOptions]);
 
   const selectedCreaturesData = useMemo(() => {
     return creatures
@@ -296,6 +312,38 @@ export default function Home() {
       });
   };
 
+  const addMap = async () => {
+    if (!newMap.name || !newMap.id) {
+      makeSnack("error", `Error adding map ${newMap.name}! Missing info.`);
+      return;
+    }
+    setUploadInProgress(true);
+    fetch("/api/maps", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(newMap),
+    })
+      .then(async (resp) => {
+        const respData = await resp.json();
+        if (respData.error) {
+          throw new Error(respData);
+        }
+        loadMetadata();
+        makeSnack("success", `Successfully added map ${newMap.name}!`);
+        setNewMap({ id: "", name: "", order: -1 });
+        setShowMapDialog(false);
+      })
+      .catch((err) => {
+        makeSnack("error", `Error adding map ${newMap.name}!`);
+        console.error(err);
+      })
+      .finally(() => {
+        setUploadInProgress(false);
+      });
+  };
+
   const loading = useMemo(() => {
     return loadingCreatures || loadingMeta || uploadInProgress;
   }, [loadingCreatures, loadingMeta, uploadInProgress]);
@@ -361,6 +409,7 @@ export default function Home() {
         selectedCreaturesData,
         handleDinoUpload,
         species,
+        maps: filterMapOptions,
         filterSpecies,
         filterMap,
         speciesBestStats,
@@ -372,6 +421,67 @@ export default function Home() {
       }}
     >
       <ReactFlowProvider>
+        <Dialog
+          open={showMapDialog}
+          onClose={() => {
+            setShowMapDialog(false);
+            setNewMap({ name: "", id: "", order: -1 });
+          }}
+          disableEscapeKeyDown
+        >
+          <DialogTitle> Add a map </DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Add a map to the list of available maps you can group creatures
+              under. The map will be available to everyone.
+            </DialogContentText>
+            <TextField
+              color="secondary"
+              sx={{
+                marginTop: "1rem",
+              }}
+              required
+              placeholder="Map Name"
+              value={newMap.name}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                setNewMap({ ...newMap, name: event.target.value });
+              }}
+            />
+            <TextField
+              color="secondary"
+              required
+              sx={{
+                marginTop: "1rem",
+              }}
+              placeholder="Map ID"
+              value={newMap.id}
+              helperText="This should be whatever string is used by an Ark server to specify the map played"
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                setNewMap({ ...newMap, id: event.target.value });
+              }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button
+              variant="contained"
+              component="span"
+              onClick={() => {
+                setShowMapDialog(false);
+                setNewMap({ name: "", id: "", order: -1 });
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              component="span"
+              onClick={addMap}
+              disabled={!newMap.id || !newMap.name}
+            >
+              Add {!newMap.id || !newMap.name ? " - Missing info!" : null}
+            </Button>
+          </DialogActions>
+        </Dialog>
         <Stack spacing={4} className="pt-20 pb-20 px-4">
           <Card className="pt-2 mx-2 w-full">
             <CardActions
@@ -380,7 +490,7 @@ export default function Home() {
               }}
             >
               <Stack>
-                <Stack spacing={2} direction={"row"} alignItems={"center"}>
+                <Stack spacing={2} direction="row" alignItems="center">
                   <input
                     disabled={!filterMap?.id}
                     accept=".json"
@@ -465,6 +575,15 @@ export default function Home() {
                       );
                     }}
                   />
+                  <Button
+                    variant="contained"
+                    component="span"
+                    onClick={() => {
+                      setShowMapDialog(true);
+                    }}
+                  >
+                    Add a map
+                  </Button>
                 </Stack>
                 {loading ? (
                   <LinearProgress

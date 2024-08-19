@@ -25,12 +25,11 @@ export async function GET(
       MATCH (oi:OwnershipInfo {id: $ownershipId})
       OPTIONAL MATCH (map)<-[:ON_MAP]-(bests:BestOf)-[:OWNED_BY]->(oi)
       OPTIONAL MATCH (bests)-[:MEMBER_OF]->(s:Species)
-      WITH bests{.*, map: map.name, species: s.blueprintPath } as bestOfMap, map.name as maps ORDER BY map.order ASC
-      RETURN collect(bestOfMap) as bests, collect(distinct maps) as maps`,
+      WITH bests{.*, map: map.id, species: s.blueprintPath } as bestOfMap
+      RETURN collect(bestOfMap) as bests`,
       { ownershipId: params.ownershipId }
     );
 
-    const maps = bestOfRecords[0]["_fields"][1];
     const bestStats = {};
     bestOfRecords[0]["_fields"][0].forEach((bestOfNode) => {
       // Safe to use just .species since :BestOf uses blueprint on the node
@@ -67,6 +66,14 @@ export async function GET(
       { ownershipId: params.ownershipId }
     );
 
+    // Fetch maps
+    const { records: mapRecords } = await driver.executeQuery(
+      `
+        MATCH (m:Map) RETURN m ORDER BY m.order ASC
+      `,
+      { ownershipId: params.ownershipId }
+    );
+
     driver.close();
     return NextResponse.json(
       {
@@ -75,7 +82,7 @@ export async function GET(
           label: s.label.replace("_", " "),
         })),
         bestStats,
-        maps,
+        maps: UnwrapStandard(mapRecords),
       },
       { status: 201 }
     );

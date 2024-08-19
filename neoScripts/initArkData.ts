@@ -4,7 +4,7 @@ require("dotenv").config({ path: "../.env.local" });
 import neo4j from "neo4j-driver";
 import { resourceMappings } from "../src/app/api/mappings/resource_mappings/route";
 import { UnwrapStandard } from "../src/lib/utils/ApiHelper";
-import { creatureMappings } from "../src/app/api/mappings/species_mappings/route";
+import { creatureMappings } from "../src/app/api/mappings/species/route";
 import { arkMappings } from "@/app/api/mappings/ark_mappings/route";
 
 if (!process.env.NEO4J_URI) throw new Error("NEO4J_URI not set");
@@ -37,9 +37,9 @@ try {
       console.error("Error updating map list!");
     });
 
-  const updateEngramsQuery = `
-  UNWIND $engrams AS row
-  MERGE (e:Engram { blueprintPath: row.blueprintPath}) SET e += {
+  const updateResourcesQuery = `
+  UNWIND $resources AS row
+  MERGE (e:Resource { blueprintPath: row.blueprintPath}) SET e += {
     primalName: row.primalName,
     label: row.label
   }
@@ -47,13 +47,13 @@ try {
 `;
 
   driver
-    .executeQuery(updateEngramsQuery, {
-      engrams: resourceMappings,
+    .executeQuery(updateResourcesQuery, {
+      resources: resourceMappings,
     })
-    .then(({ records: engramRecords }) => {
+    .then(({ records: resourceRecords }) => {
       console.log(
         "Updated engram records: ",
-        UnwrapStandard(engramRecords).length
+        UnwrapStandard(resourceRecords).length
       );
     })
     .catch((e) => {

@@ -9,6 +9,8 @@ export async function POST(req) {
   try {
     const { driver } = createSession();
 
+    const now = Date.now();
+
     // userDinoInfo might actually be several, so...
     let allDinoInfo;
     if (Array.isArray(userDinoInfo)) {
@@ -41,6 +43,7 @@ export async function POST(req) {
         blueprintPath: `Blueprint'${dinoInfo.BlueprintPath.slice(0, -2)}'`,
         father: undefined,
         mother: undefined,
+        updated: now,
       };
 
       impactedSpecies.add(nodeSafeDinoInfo.blueprintPath);
@@ -95,7 +98,8 @@ export async function POST(req) {
           wildWeight: CASE WHEN coalesce(statTrack.wildWeight, 0) > ${nodeSafeDinoInfo["wildWeight"]} THEN coalesce(statTrack.wildWeight, 0) ELSE ${nodeSafeDinoInfo["wildWeight"]} END,
           mutatedWeight: CASE WHEN coalesce(statTrack.mutatedWeight, 0) > ${nodeSafeDinoInfo["mutatedWeight"]} THEN coalesce(statTrack.mutatedWeight, 0) ELSE ${nodeSafeDinoInfo["mutatedWeight"]} END,
           wildMelee: CASE WHEN coalesce(statTrack.wildMelee, 0) > ${nodeSafeDinoInfo["wildMelee"]} THEN coalesce(statTrack.wildMelee, 0) ELSE ${nodeSafeDinoInfo["wildMelee"]} END,
-          mutatedMelee: CASE WHEN coalesce(statTrack.mutatedMelee, 0) > ${nodeSafeDinoInfo["mutatedMelee"]} THEN coalesce(statTrack.mutatedMelee, 0) ELSE ${nodeSafeDinoInfo["mutatedMelee"]} END
+          mutatedMelee: CASE WHEN coalesce(statTrack.mutatedMelee, 0) > ${nodeSafeDinoInfo["mutatedMelee"]} THEN coalesce(statTrack.mutatedMelee, 0) ELSE ${nodeSafeDinoInfo["mutatedMelee"]} END,
+          updated: $now
       }
       MERGE (statTrack)-[:MEMBER_OF]->(s)
       MERGE (dino)-[:MEMBER_OF]->(s)`;
