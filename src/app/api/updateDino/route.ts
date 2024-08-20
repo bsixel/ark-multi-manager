@@ -77,7 +77,7 @@ export async function POST(req) {
 
       let query = `
       MATCH (oi:OwnershipInfo {id: $ownershipId})
-      MATCH (map:Map {name: $map})
+      MATCH (map:Map {id: $map})
       MERGE (s:Species {blueprintPath: $nodeSafeDinoInfo.blueprintPath}) ON CREATE SET s.label = $fallbackSpecies
       MERGE (map)<-[:ON_MAP]-(dino:Dino { dinoId: $nodeSafeDinoInfo.dinoId })-[:OWNED_BY]->(oi) SET dino = $nodeSafeDinoInfo
       MERGE (map)<-[:ON_MAP]-(statTrack:BestOf {species: s.blueprintPath})-[:OWNED_BY]->(oi)
