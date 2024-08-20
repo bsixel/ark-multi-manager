@@ -79,6 +79,7 @@ export async function POST(req) {
       MATCH (oi:OwnershipInfo {id: $ownershipId})
       MATCH (:Map)<-[oldMapRel:ON_MAP]-(:Dino { dinoId: $nodeSafeDinoInfo.dinoId })
       DELETE oldMapRel
+      WITH oi
       MATCH (map:Map {id: $map})
       MERGE (s:Species {blueprintPath: $nodeSafeDinoInfo.blueprintPath}) ON CREATE SET s.label = $fallbackSpecies
       MERGE (map)<-[:ON_MAP]-(dino:Dino { dinoId: $nodeSafeDinoInfo.dinoId })-[:OWNED_BY]->(oi) SET dino = $nodeSafeDinoInfo
