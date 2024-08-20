@@ -125,6 +125,7 @@ export async function POST(req) {
         father,
         mother,
         fallbackSpecies: species,
+        now,
       });
 
       results.push(UnwrapStandard(records));
