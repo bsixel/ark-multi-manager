@@ -196,7 +196,7 @@ export default function Home() {
     return species.filter(
       (s) =>
         (!filterMap?.id && speciesBestStats[s.blueprintPath]) ||
-        speciesBestStats[s.blueprintPath]?.[filterMap.id]
+        speciesBestStats?.[s.blueprintPath]?.[filterMap?.id]
     );
   }, [species, filterMap, speciesBestStats]);
 
@@ -378,7 +378,7 @@ export default function Home() {
       stat: string | null
     ) => {
       const creatureSpecies = creature.blueprintPath || creature.species;
-      const bestOfForMap = speciesBestStats[creatureSpecies][filterMap.id];
+      const bestOfForMap = speciesBestStats?.[creatureSpecies]?.[filterMap?.id];
       if (!bestOfForMap) return false; // In case we're missing data
 
       if (type && stat) {
