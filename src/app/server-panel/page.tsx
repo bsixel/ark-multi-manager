@@ -1,3 +1,4 @@
+"use client";
 import { GlobalContext } from "@/lib/components/layout/appBarLayout";
 import { createContext, useContext } from "react";
 
