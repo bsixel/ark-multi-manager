@@ -23,11 +23,6 @@ import {
   SelectChangeEvent,
   Typography,
   Box,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
 } from "@mui/material";
 import Grid from "@mui/material/Unstable_Grid2";
 import { GridRowSelectionModel } from "@mui/x-data-grid";
@@ -37,6 +32,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { ReactFlowProvider } from "reactflow";
@@ -53,6 +49,8 @@ import ColorChip from "@/lib/components/display/ColorChip";
 import { DINO_COLORS } from "@/lib/utils/ColorMappings";
 import { ArkMap, Species } from "@/lib/types/global";
 import { useDebounce } from "@/lib/hooks/useDebounce";
+import AddMapDialog from "@/lib/components/dialogs/AddMapDialog";
+import { AddMapDialogRef } from "@/lib/components/dialogs/AddMapDialog";
 
 type FilterMapOption = ArkMap & {
   label: string;
@@ -62,12 +60,6 @@ const ALL_MAPS: FilterMapOption = {
   id: null,
   order: -1,
   label: "All Maps",
-};
-
-type MetadataDefinition = {
-  bestStats: BestOf[];
-  species: Species[];
-  maps: ArkMap[];
 };
 
 type CreatureFetchPayload = {
@@ -133,7 +125,20 @@ export type HomeContextDefinition = {
 export const HomeContext = createContext<HomeContextDefinition>(null);
 
 export default function Home() {
-  const { ownershipInfo, currentTab, makeSnack } = useContext(GlobalContext);
+  const {
+    ownershipInfo,
+    currentTab,
+    makeSnack,
+    uploadInProgress,
+    setUploadInProgress,
+    metadataQuery: {
+      queryResult: { species, bestStats: speciesBestStats, maps: backendMaps },
+      exec: loadMetadata,
+      isLoading: loadingMeta,
+      error: metadataError,
+      transactionId: metadataTransactionId,
+    },
+  } = useContext(GlobalContext);
 
   const [selectedCreatures, setSelectedCreatures] =
     useState<GridRowSelectionModel>([]);
@@ -145,13 +150,7 @@ export default function Home() {
     {}
   );
   const [colorFilters, setColorFilters] = useState<ColorFilter>({});
-  const [uploadInProgress, setUploadInProgress] = useState<boolean>(false);
-  const [showMapDialog, setShowMapDialog] = useState<boolean>(false);
-  const [newMap, setNewMap] = useState<ArkMap>({
-    name: "",
-    id: "",
-    order: -1,
-  });
+  const mapDialogRef = useRef<AddMapDialogRef>();
 
   // Load some stored defaults
 
@@ -162,19 +161,6 @@ export default function Home() {
   } = useQuery<CreatureFetchPayload>({
     url: `/api/creatures/${ownershipInfo.id}`,
     defaultValue: { creatures: [], relations: [], speciesColors: {} },
-  });
-
-  const {
-    queryResult: { species, bestStats: speciesBestStats, maps: backendMaps },
-    exec: loadMetadata,
-    isLoading: loadingMeta,
-  } = useQuery<MetadataDefinition>({
-    url: `/api/metadata/${ownershipInfo.id}`,
-    defaultValue: {
-      species: [],
-      maps: [],
-      bestStats: [],
-    },
   });
 
   useEffect(() => {
@@ -312,38 +298,6 @@ export default function Home() {
       });
   };
 
-  const addMap = async () => {
-    if (!newMap.name || !newMap.id) {
-      makeSnack("error", `Error adding map ${newMap.name}! Missing info.`);
-      return;
-    }
-    setUploadInProgress(true);
-    fetch("/api/maps", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(newMap),
-    })
-      .then(async (resp) => {
-        const respData = await resp.json();
-        if (respData.error) {
-          throw new Error(respData);
-        }
-        loadMetadata();
-        makeSnack("success", `Successfully added map ${newMap.name}!`);
-        setNewMap({ id: "", name: "", order: -1 });
-        setShowMapDialog(false);
-      })
-      .catch((err) => {
-        makeSnack("error", `Error adding map ${newMap.name}!`);
-        console.error(err);
-      })
-      .finally(() => {
-        setUploadInProgress(false);
-      });
-  };
-
   const loading = useMemo(() => {
     return loadingCreatures || loadingMeta || uploadInProgress;
   }, [loadingCreatures, loadingMeta, uploadInProgress]);
@@ -421,67 +375,7 @@ export default function Home() {
       }}
     >
       <ReactFlowProvider>
-        <Dialog
-          open={showMapDialog}
-          onClose={() => {
-            setShowMapDialog(false);
-            setNewMap({ name: "", id: "", order: -1 });
-          }}
-          disableEscapeKeyDown
-        >
-          <DialogTitle> Add a map </DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              Add a map to the list of available maps you can group creatures
-              under. The map will be available to everyone.
-            </DialogContentText>
-            <TextField
-              color="secondary"
-              sx={{
-                marginTop: "1rem",
-              }}
-              required
-              placeholder="Map Name"
-              value={newMap.name}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                setNewMap({ ...newMap, name: event.target.value });
-              }}
-            />
-            <TextField
-              color="secondary"
-              required
-              sx={{
-                marginTop: "1rem",
-              }}
-              placeholder="Map ID"
-              value={newMap.id}
-              helperText="This should be whatever string is used by an Ark server to specify the map played"
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                setNewMap({ ...newMap, id: event.target.value });
-              }}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button
-              variant="contained"
-              component="span"
-              onClick={() => {
-                setShowMapDialog(false);
-                setNewMap({ name: "", id: "", order: -1 });
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              component="span"
-              onClick={addMap}
-              disabled={!newMap.id || !newMap.name}
-            >
-              Add {!newMap.id || !newMap.name ? " - Missing info!" : null}
-            </Button>
-          </DialogActions>
-        </Dialog>
+        <AddMapDialog ref={mapDialogRef} />
         <Stack spacing={4} className="pt-20 pb-20 px-4">
           <Card className="pt-2 mx-2 w-full">
             <CardActions
@@ -579,7 +473,7 @@ export default function Home() {
                     variant="contained"
                     component="span"
                     onClick={() => {
-                      setShowMapDialog(true);
+                      mapDialogRef.current?.open();
                     }}
                   >
                     Add a map

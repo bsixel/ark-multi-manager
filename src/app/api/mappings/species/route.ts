@@ -2041,6 +2041,8 @@ export async function GET() {
 
     const { records } = await driver.executeQuery(`MATCH (s:Species) RETURN s`);
 
+    console.log("requested list of species");
+
     driver.close();
     return NextResponse.json(UnwrapStandard(records), { status: 201 });
   } catch (err) {
@@ -2048,6 +2050,55 @@ export async function GET() {
       {
         error: err?.message ?? "Unknown",
         message: "Unable to fetch species!",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const { session } = createSession();
+    const body = await request.json();
+    const query = `
+        UNWIND $speciesList AS item
+        MERGE (g:Genus { blueprintPath: item.genus.blueprintpath })
+        ON CREATE SET 
+            g.primalName = item.genus.primalname,
+            g.label = item.genus.label
+        
+        MERGE (s:Species { blueprintPath: item.blueprintpath })
+        ON CREATE SET 
+            s.primalName = item.primalname,
+            s.label = item.label
+            
+        MERGE (s)-[:MEMBER_OF]->(g)
+    `;
+
+    if (body?.species?.species?.length) {
+      await session.run(query, { speciesList: body?.species?.species });
+
+      console.log(
+        `${body?.species?.species?.length} species processed successfully.`
+      );
+
+      return NextResponse.json(
+        { msg: "Successfully submitted species for logging" },
+        { status: 201 }
+      );
+    } else {
+      console.log("No species found to process.");
+      return NextResponse.json(
+        { msg: "No species found to process." },
+        { status: 201 }
+      );
+    }
+  } catch (err) {
+    console.log(err);
+    return NextResponse.json(
+      {
+        error: err?.message ?? "Unknown",
+        message: "Unable to upload new species!",
       },
       { status: 500 }
     );

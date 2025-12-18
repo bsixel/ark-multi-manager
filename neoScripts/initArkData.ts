@@ -2,7 +2,7 @@
 require("dotenv").config({ path: "../.env.local" });
 
 import neo4j from "neo4j-driver";
-import { resourceMappings } from "../src/app/api/mappings/resource_mappings/route";
+import { items } from "../src/app/api/mappings/items/route";
 import { UnwrapStandard } from "../src/lib/utils/ApiHelper";
 import { creatureMappings } from "../src/app/api/mappings/species/route";
 import { arkMappings } from "@/app/api/mappings/ark_mappings/route";
@@ -37,9 +37,9 @@ try {
       console.error("Error updating map list!");
     });
 
-  const updateResourcesQuery = `
-  UNWIND $resources AS row
-  MERGE (e:Resource { blueprintPath: row.blueprintPath}) SET e += {
+  const updateItemsQuery = `
+  UNWIND $items AS row
+  MERGE (e:Item { blueprintPath: row.blueprintPath}) SET e += {
     primalName: row.primalName,
     label: row.label
   }
@@ -47,17 +47,12 @@ try {
 `;
 
   driver
-    .executeQuery(updateResourcesQuery, {
-      resources: resourceMappings,
-    })
-    .then(({ records: resourceRecords }) => {
-      console.log(
-        "Updated engram records: ",
-        UnwrapStandard(resourceRecords).length
-      );
+    .executeQuery(updateItemsQuery, { items })
+    .then(({ records: itemRecords }) => {
+      console.log("Updated item records: ", UnwrapStandard(itemRecords).length);
     })
     .catch((e) => {
-      console.error("Error updating engram list!");
+      console.error("Error updating item list!");
     });
   const updateSpeciesDefinitionsQuery = `
   UNWIND $creatureMappings AS row

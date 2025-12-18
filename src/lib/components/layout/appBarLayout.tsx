@@ -12,7 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Home as HomeIcon, Logout } from "@mui/icons-material";
-import { OwnershipInfo } from "@/lib/types/global";
+import { MetadataDefinition, OwnershipInfo } from "@/lib/types/global";
 import {
   createContext,
   useCallback,
@@ -25,12 +25,16 @@ import { DEFAULT_GET_OPTIONS } from "@/lib/utils/ApiHelper";
 import { usePathname } from "next/navigation";
 import SnackAlert from "../display/SnackAlert";
 import { useRouter } from "next/navigation";
+import useQuery, { UseQueryOutput } from "@/lib/hooks/useQuery";
 
 export type GlobalContextDefinition = {
   ownershipInfo: OwnershipInfo;
   setGlobalOwnershipId: (id: string) => void;
   currentTab: number;
   makeSnack: (level: string, msg: string) => void;
+  uploadInProgress: boolean;
+  setUploadInProgress: (value: boolean) => void;
+  metadataQuery: UseQueryOutput<MetadataDefinition>;
 };
 
 export const GlobalContext = createContext<GlobalContextDefinition>({
@@ -38,6 +42,9 @@ export const GlobalContext = createContext<GlobalContextDefinition>({
   setGlobalOwnershipId: null,
   currentTab: 0,
   makeSnack: () => {},
+  uploadInProgress: false,
+  setUploadInProgress: () => {},
+  metadataQuery: {} as UseQueryOutput<MetadataDefinition>,
 });
 
 export default function AppBarLayout({
@@ -53,6 +60,26 @@ export default function AppBarLayout({
   const [currentTab, setCurrentTab] = useState<number>(0);
   const pathname = usePathname();
   const [snacks, setSnacks] = useState([]);
+  const [uploadInProgress, setUploadInProgress] = useState(false);
+
+  const {
+    queryResult: {
+      species: species,
+      bestStats: speciesBestStats,
+      maps: backendMaps,
+    },
+    exec: loadMetadata,
+    isLoading: loadingMeta,
+    error: metadataError,
+    transactionId: metadataTransactionId,
+  } = useQuery<MetadataDefinition>({
+    url: `/api/metadata/${ownershipInfo.id}`,
+    defaultValue: {
+      species: [],
+      maps: [],
+      bestStats: [],
+    },
+  });
 
   useEffect(() => {
     setGlobalOwnershipId(localStorage.getItem(`${LOCAL_PREFIX}ownershipId`));
@@ -133,6 +160,19 @@ export default function AppBarLayout({
           setGlobalOwnershipId,
           currentTab,
           makeSnack,
+          uploadInProgress,
+          setUploadInProgress,
+          metadataQuery: {
+            queryResult: {
+              species,
+              bestStats: speciesBestStats,
+              maps: backendMaps,
+            },
+            exec: loadMetadata,
+            isLoading: loadingMeta,
+            error: metadataError,
+            transactionId: metadataTransactionId,
+          },
         }}
       >
         {snacks}

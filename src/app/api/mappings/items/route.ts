@@ -1,7 +1,8 @@
+import { Item } from "@/lib/types/global";
 import { createSession, UnwrapStandard } from "@/lib/utils/ApiHelper";
 import { NextResponse } from "next/server";
 // Run through https://jsonformatter.curiousconcept.com/# if we want quoted properties which apparently some places complain about
-export const resourceMappings = [
+export const items: Item[] = [
   {
     label: "Absorbent Substrate",
     primalName: "PrimalItemResource_SubstrateAbsorbent_C",
@@ -518,9 +519,7 @@ export async function GET() {
   try {
     const { driver } = createSession();
 
-    const { records } = await driver.executeQuery(
-      `MATCH (r:Resource) RETURN r`
-    );
+    const { records } = await driver.executeQuery(`MATCH (r:Item) RETURN r`);
 
     driver.close();
     return NextResponse.json(UnwrapStandard(records), { status: 201 });
@@ -528,7 +527,49 @@ export async function GET() {
     return NextResponse.json(
       {
         error: err?.message ?? "Unknown",
-        message: "Unable to fetch resources!",
+        message: "Unable to fetch items!",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const { session } = createSession();
+    const body = await request.json();
+    const query = `
+        UNWIND $itemList AS item
+        MERGE (s:Item { blueprintPath: item.blueprintpath })
+        ON CREATE SET 
+            s.primalName = item.primalname,
+            s.label = item.label
+    `;
+
+    if (body?.entries?.entries?.length) {
+      await session.run(query, { itemList: body?.entries?.entries });
+
+      console.log(
+        `${body?.entries?.entries?.length} items processed successfully.`
+      );
+
+      return NextResponse.json(
+        { msg: "Successfully submitted items for logging" },
+        { status: 201 }
+      );
+    } else {
+      console.log("No items found to process.");
+      return NextResponse.json(
+        { msg: "No items found to process." },
+        { status: 201 }
+      );
+    }
+  } catch (err) {
+    console.log(err);
+    return NextResponse.json(
+      {
+        error: err?.message ?? "Unknown",
+        message: "Unable to upload new items!",
       },
       { status: 500 }
     );
