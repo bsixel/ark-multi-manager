@@ -1,24 +1,22 @@
 export type CommandLineOptions = {
-    SERVER_PASSWORD?: string;
-    ARK_ADMIN_PASSWORD: string;
-    SERVER_PORT: number;
-    SERVER_MAP: string;
-    CLUSTER_ID?: string;
-    SESSION_NAME: string;
-    SERVER_PVE: boolean;
-    BATTLE_EYE: boolean;
-    MAX_PLAYERS: number;
-    FORCE_RESPAWN_DINOS: boolean;
-    MAP_MOD_ID: number;
-    MOD_IDS: number[];
-}
-
-
+  SERVER_PASSWORD?: string;
+  ARK_ADMIN_PASSWORD: string;
+  SERVER_PORT: number;
+  SERVER_MAP: string;
+  CLUSTER_ID?: string;
+  SESSION_NAME: string;
+  SERVER_PVE: boolean;
+  BATTLE_EYE: boolean;
+  MAX_PLAYERS: number;
+  FORCE_RESPAWN_DINOS: boolean;
+  MAP_MOD_ID: number;
+  MOD_IDS: number[];
+};
 
 /**was it down?
- * 
+ *
  * from CT species-log
- * 
+ *
  {
  	"species":
  	{
